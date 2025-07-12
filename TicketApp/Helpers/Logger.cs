@@ -5,19 +5,22 @@ namespace TicketApp.Helpers
 {
     public static class Logger
     {
-        private static string logPath = "error.log";
+        private static string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "error.log");
 
-        // Writes exceptions to a log file
         public static void Log(Exception ex)
         {
             try
             {
-                string message = $"[{DateTime.Now}] {ex.Message}\n{ex.StackTrace}\n";
-                File.AppendAllText(logPath, message);
+                using (StreamWriter sw = new StreamWriter(logPath, true))
+                {
+                    sw.WriteLine($"[{DateTime.Now}] {ex.Message}");
+                    sw.WriteLine(ex.StackTrace);
+                    sw.WriteLine("--------------------------------------------------");
+                }
             }
             catch
             {
-                // If logging fails, don't throw again.
+                // Logging failed silently
             }
         }
     }

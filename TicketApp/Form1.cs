@@ -8,20 +8,16 @@ namespace TicketApp
 {
     public partial class Form1 : Form
     {
-        private ComboBox comboBoxArea;
-        private ComboBox comboBoxIssue;
-        private TextBox textBoxDescription;
-        private Button btnSubmit;
-        private ListBox listBoxTickets;
+        // Issues are categorized per area (UAP-1, FES, etc.)
         private Dictionary<string, List<string>> issueMap = new Dictionary<string, List<string>>();
 
         public Form1()
         {
             InitializeComponent();
-            InitializeUI();
             InitializeApp();
         }
 
+        // Populate dropdowns and issue mappings
         private void InitializeApp()
         {
             try
@@ -31,79 +27,165 @@ namespace TicketApp
                 comboBoxArea.Items.AddRange(new string[] { "UAP-1", "UAP-2", "UAP-3", "UAP-4", "FES" });
                 comboBoxArea.SelectedIndexChanged += ComboBoxArea_SelectedIndexChanged;
 
-                // Sorun haritaları
                 issueMap["GENEL"] = new List<string> {
-                    "Computer won't start",
-                    "Mouse not working",
-                    "Keyboard issue",
-                    "Paper jam in printer",
-                    "Printer not connected",
-                    "Printer not working"
+                    "Bilgisayar açılmıyor",
+                    "Mouse bozuldu",
+                    "Klavye çalışmıyor",
+                    "Yazıcıya kağıt sıkıştı",
+                    "Yazıcıya internet gitmiyor",
+                    "Yazıcı çalışmıyor"
                 };
 
-                issueMap["UAP-1"] = new List<string> { "SAP Terminal freezes", "Barcode printer issue" };
-                issueMap["UAP-2"] = new List<string> { "IP unreachable" };
-                issueMap["FES"] = new List<string> { "PLC connection lost", "Label printer offline" };
+                issueMap["UAP-1"] = new List<string> { "SAP terminal donuyor", "Barkod yazıcı hatası" };
+                issueMap["UAP-2"] = new List<string> { "IP erişilemiyor" };
+                issueMap["FES"] = new List<string> { "PLC bağlantısı kesildi", "Etiket yazıcı çevrimdışı" };
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                MessageBox.Show("Initialization error. Check log file.", "Error");
+                MessageBox.Show("Başlatma hatası. Log dosyasına bakınız.", "Hata");
             }
         }
 
+        // When area is changed, update issues accordingly
         private void ComboBoxArea_SelectedIndexChanged(object sender, EventArgs e)
         {
             try
             {
-                string area = comboBoxArea.SelectedItem.ToString();
+                string selected = comboBoxArea.SelectedItem.ToString();
                 comboBoxIssue.Items.Clear();
 
-                if (issueMap.ContainsKey(area))
-                    comboBoxIssue.Items.AddRange(issueMap[area].ToArray());
+                if (issueMap.ContainsKey(selected))
+                    comboBoxIssue.Items.AddRange(issueMap[selected].ToArray());
 
                 comboBoxIssue.Items.AddRange(issueMap["GENEL"].ToArray());
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                MessageBox.Show("Error loading issues.", "Error");
+                MessageBox.Show("Sorun listesi yüklenemedi.", "Hata");
             }
         }
 
+        // When submit button clicked, create ticket
         private void BtnSubmit_Click(object sender, EventArgs e)
         {
             try
             {
-                if (comboBoxArea.SelectedItem == null || comboBoxIssue.SelectedItem == null)
+                // Kullanıcı alanı seçmiş mi?
+                if (comboBoxArea.SelectedItem == null)
                 {
-                    MessageBox.Show("Please select both Area and Issue.", "Validation Error");
+                    MessageBox.Show("Lütfen bir alan (UAP/FES) seçin.", "Eksik Alan");
                     return;
                 }
 
+                // Kullanıcı sorunu seçmiş mi?
+                if (comboBoxIssue.SelectedItem == null)
+                {
+                    MessageBox.Show("Lütfen bir sorun tipi seçin.", "Eksik Sorun");
+                    return;
+                }
+
+                string desc = textBoxDescription.Text.Trim();
+
+                // Açıklama boş mu?
+                if (string.IsNullOrWhiteSpace(desc))
+                {
+                    MessageBox.Show("Lütfen açıklama alanını doldurun.", "Eksik Açıklama");
+                    return;
+                }
+
+                // Açıklama çok uzun mu?
+                if (desc.Length > 300)
+                {
+                    MessageBox.Show("Açıklama en fazla 300 karakter olabilir.", "Aşırı Uzun Açıklama");
+                    return;
+                }
+
+                // Her şey doğruysa kayıt yap
                 var ticket = new Ticket
                 {
                     Area = comboBoxArea.SelectedItem.ToString(),
                     Issue = comboBoxIssue.SelectedItem.ToString(),
-                    Description = textBoxDescription.Text.Trim(),
+                    Description = desc,
                     CreatedAt = DateTime.Now
                 };
 
                 DatabaseHelper.InsertTicket(ticket);
 
-                listBoxTickets.Items.Add($"[{ticket.CreatedAt}] {ticket.Area} - {ticket.Issue}");
+                listBoxTickets.Items.Insert(0, $"[{ticket.CreatedAt}] {ticket.Area} - {ticket.Issue}");
                 comboBoxIssue.SelectedIndex = -1;
                 textBoxDescription.Clear();
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                MessageBox.Show("Ticket submission failed.", "Error");
+                MessageBox.Show("Talep gönderilirken hata oluştu.", "Hata");
             }
         }
+
         private void Form1_Load(object sender, EventArgs e)
         {
-            // Not used anymore
+            try
+            {
+                var tickets = DatabaseHelper.GetAllTickets();
+                foreach (var t in tickets)
+                {
+                    listBoxTickets.Items.Add($"[{t.CreatedAt}] {t.Area} - {t.Issue}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                MessageBox.Show("Kayıtlar yüklenemedi.", "Hata");
+            }
+        }
+
+        private void BtnDelete_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (listBoxTickets.SelectedItem == null)
+                {
+                    MessageBox.Show("Lütfen silmek istediğiniz talebi seçin.", "Uyarı");
+                    return;
+                }
+
+                string selectedText = listBoxTickets.SelectedItem.ToString();
+
+                // [2025-07-12 15:31:48] UAP-1 - Mouse bozuldu
+                // Tarihi çekiyoruz
+                int start = selectedText.IndexOf('[') + 1;
+                int end = selectedText.IndexOf(']');
+                string dateStr = selectedText.Substring(start, end - start);
+
+                if (DateTime.TryParse(dateStr, out DateTime createdAt))
+                {
+                    DialogResult result = MessageBox.Show("Seçili talep silinsin mi?", "Onay", MessageBoxButtons.YesNo);
+
+                    if (result == DialogResult.Yes)
+                    {
+                        DatabaseHelper.DeleteTicket(createdAt);
+                        listBoxTickets.Items.Remove(listBoxTickets.SelectedItem);
+                        MessageBox.Show("Talep başarıyla silindi.");
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Tarih ayrıştırılamadı, silme işlemi başarısız oldu.", "Hata");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                MessageBox.Show("Silme sırasında hata oluştu.", "Hata");
+            }
+        }
+
+
+        private void comboBoxArea_SelectedIndexChanged_1(object sender, EventArgs e)
+        {
+
         }
     }
 }
