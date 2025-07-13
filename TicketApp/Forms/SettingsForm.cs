@@ -10,14 +10,14 @@ using System.Windows.Forms;
 
 namespace TicketApp.Forms
 {
-    public partial class MainForm : Form
+    public partial class SettingsForm : Form
     {
-        public MainForm()
+        public SettingsForm()
         {
             InitializeComponent();
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
+        private void SettingsForm_Load(object sender, EventArgs e)
         {
 
         }

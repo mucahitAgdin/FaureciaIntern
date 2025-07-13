@@ -1,12 +1,16 @@
-﻿using System;
+﻿// Logger.cs
+using System;
 using System.IO;
 
 namespace TicketApp.Helpers
 {
+    // Logger sınıfı uygulamadaki hataları log dosyasına yazmak için kullanılır.
     public static class Logger
     {
-        private static string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "error.log");
+        // Hata loglarının yazılacağı dosya yolu
+        private static readonly string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "error.log");
 
+        // Hata mesajını dosyaya yazar
         public static void Log(Exception ex)
         {
             try
@@ -15,12 +19,12 @@ namespace TicketApp.Helpers
                 {
                     sw.WriteLine($"[{DateTime.Now}] {ex.Message}");
                     sw.WriteLine(ex.StackTrace);
-                    sw.WriteLine("--------------------------------------------------");
+                    sw.WriteLine(new string('-', 50));
                 }
             }
             catch
             {
-                // Logging failed silently
+                // Log yazma da başarısız olursa sessizce geçilir.
             }
         }
     }

@@ -1,32 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using TicketApp.Models;
-using TicketApp.Helpers;
+using TicketApp.Models;  // Ticket modelini kullanmak için
+using TicketApp.Helpers; // Yardımcı sınıflar (veritabanı, log vs.)
+using System.Timers;     // Timer kullanımı için
 
 namespace TicketApp
 {
     public partial class Form1 : Form
     {
-        // Issues are categorized per area (UAP-1, FES, etc.)
+        // Belirli alanlara (bölgelere) göre tanımlı sorun listesi
         private Dictionary<string, List<string>> issueMap = new Dictionary<string, List<string>>();
+
+        // Günlük temizlik işlemi için zamanlayıcı (her 24 saatte bir çalışacak)
+        private System.Windows.Forms.Timer dailyCleanupTimer;
 
         public Form1()
         {
-            InitializeComponent();
-            InitializeApp();
+            InitializeComponent(); // UI bileşenlerini oluşturur (Form1.Designer.cs çağrısı)
+            InitializeApp();       // Uygulamanın verilerini ve olaylarını kurar
+            InitializeTimer();     // Zamanlayıcı başlatılır
         }
 
-        // Populate dropdowns and issue mappings
+        /// <summary>
+        /// Uygulama açıldığında yapılacak kurulumlar (veritabanı, comboboxlar vs.)
+        /// </summary>
         private void InitializeApp()
         {
             try
             {
+                // Veritabanı yoksa oluşturulacak, varsa açılacak
                 DatabaseHelper.InitializeDatabase();
 
+                // Kullanıcının seçim yapması için alanlar (UAP, FES) ekleniyor
                 comboBoxArea.Items.AddRange(new string[] { "UAP-1", "UAP-2", "UAP-3", "UAP-4", "FES" });
                 comboBoxArea.SelectedIndexChanged += ComboBoxArea_SelectedIndexChanged;
 
+                // Her alan için özel tanımlı sorunlar
                 issueMap["GENEL"] = new List<string> {
                     "Bilgisayar açılmıyor",
                     "Mouse bozuldu",
@@ -35,30 +45,42 @@ namespace TicketApp
                     "Yazıcıya internet gitmiyor",
                     "Yazıcı çalışmıyor"
                 };
-
                 issueMap["UAP-1"] = new List<string> { "SAP terminal donuyor", "Barkod yazıcı hatası" };
                 issueMap["UAP-2"] = new List<string> { "IP erişilemiyor" };
                 issueMap["FES"] = new List<string> { "PLC bağlantısı kesildi", "Etiket yazıcı çevrimdışı" };
             }
             catch (Exception ex)
             {
-                Logger.Log(ex);
+                Logger.Log(ex); // Hata loglanır
                 MessageBox.Show("Başlatma hatası. Log dosyasına bakınız.", "Hata");
             }
         }
 
-        // When area is changed, update issues accordingly
+        /// <summary>
+        /// Her 24 saatte bir çalışacak temizleme zamanlayıcısını başlatır.
+        /// </summary>
+        private void InitializeTimer()
+        {
+            dailyCleanupTimer = new System.Windows.Forms.Timer();
+            dailyCleanupTimer.Interval = 86400000; // 24 saat = 24*60*60*1000 ms
+            dailyCleanupTimer.Tick += DailyCleanupTimer_Tick;
+            dailyCleanupTimer.Start(); // Zamanlayıcı başlar
+        }
+
+        /// <summary>
+        /// Kullanıcı alan (UAP/FES) seçtiğinde uygun sorunları yükler
+        /// </summary>
         private void ComboBoxArea_SelectedIndexChanged(object sender, EventArgs e)
         {
             try
             {
                 string selected = comboBoxArea.SelectedItem.ToString();
-                comboBoxIssue.Items.Clear();
+                comboBoxIssue.Items.Clear(); // Önceki seçenekler temizlenir
 
                 if (issueMap.ContainsKey(selected))
-                    comboBoxIssue.Items.AddRange(issueMap[selected].ToArray());
+                    comboBoxIssue.Items.AddRange(issueMap[selected].ToArray()); // Özel sorunlar
 
-                comboBoxIssue.Items.AddRange(issueMap["GENEL"].ToArray());
+                comboBoxIssue.Items.AddRange(issueMap["GENEL"].ToArray()); // Herkese açık sorunlar
             }
             catch (Exception ex)
             {
@@ -67,68 +89,14 @@ namespace TicketApp
             }
         }
 
-        // When submit button clicked, create ticket
-        private void BtnSubmit_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                // Kullanıcı alanı seçmiş mi?
-                if (comboBoxArea.SelectedItem == null)
-                {
-                    MessageBox.Show("Lütfen bir alan (UAP/FES) seçin.", "Eksik Alan");
-                    return;
-                }
-
-                // Kullanıcı sorunu seçmiş mi?
-                if (comboBoxIssue.SelectedItem == null)
-                {
-                    MessageBox.Show("Lütfen bir sorun tipi seçin.", "Eksik Sorun");
-                    return;
-                }
-
-                string desc = textBoxDescription.Text.Trim();
-
-                // Açıklama boş mu?
-                if (string.IsNullOrWhiteSpace(desc))
-                {
-                    MessageBox.Show("Lütfen açıklama alanını doldurun.", "Eksik Açıklama");
-                    return;
-                }
-
-                // Açıklama çok uzun mu?
-                if (desc.Length > 300)
-                {
-                    MessageBox.Show("Açıklama en fazla 300 karakter olabilir.", "Aşırı Uzun Açıklama");
-                    return;
-                }
-
-                // Her şey doğruysa kayıt yap
-                var ticket = new Ticket
-                {
-                    Area = comboBoxArea.SelectedItem.ToString(),
-                    Issue = comboBoxIssue.SelectedItem.ToString(),
-                    Description = desc,
-                    CreatedAt = DateTime.Now
-                };
-
-                DatabaseHelper.InsertTicket(ticket);
-
-                listBoxTickets.Items.Insert(0, $"[{ticket.CreatedAt}] {ticket.Area} - {ticket.Issue}");
-                comboBoxIssue.SelectedIndex = -1;
-                textBoxDescription.Clear();
-            }
-            catch (Exception ex)
-            {
-                Logger.Log(ex);
-                MessageBox.Show("Talep gönderilirken hata oluştu.", "Hata");
-            }
-        }
-
+        /// <summary>
+        /// Form yüklendiğinde, var olan tüm ticketlar ekrana yazdırılır
+        /// </summary>
         private void Form1_Load(object sender, EventArgs e)
         {
             try
             {
-                var tickets = DatabaseHelper.GetAllTickets();
+                var tickets = DatabaseHelper.GetAllTickets(); // Tüm kayıtlar alınır
                 foreach (var t in tickets)
                 {
                     listBoxTickets.Items.Add($"[{t.CreatedAt}] {t.Area} - {t.Issue}");
@@ -141,51 +109,86 @@ namespace TicketApp
             }
         }
 
-        private void BtnDelete_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Talep Gönder butonuna basıldığında yeni kayıt oluşturulur
+        /// </summary>
+        private void BtnSubmit_Click(object sender, EventArgs e)
         {
             try
             {
-                if (listBoxTickets.SelectedItem == null)
+                // Alan ve sorun tipi seçilmiş mi kontrolü
+                if (comboBoxArea.SelectedItem == null || comboBoxIssue.SelectedItem == null)
                 {
-                    MessageBox.Show("Lütfen silmek istediğiniz talebi seçin.", "Uyarı");
+                    MessageBox.Show("Lütfen alan ve sorun tipi seçin.", "Eksik Bilgi");
                     return;
                 }
 
-                string selectedText = listBoxTickets.SelectedItem.ToString();
+                string desc = textBoxDescription.Text.Trim();
 
-                // [2025-07-12 15:31:48] UAP-1 - Mouse bozuldu
-                // Tarihi çekiyoruz
-                int start = selectedText.IndexOf('[') + 1;
-                int end = selectedText.IndexOf(']');
-                string dateStr = selectedText.Substring(start, end - start);
-
-                if (DateTime.TryParse(dateStr, out DateTime createdAt))
+                if (string.IsNullOrWhiteSpace(desc))
                 {
-                    DialogResult result = MessageBox.Show("Seçili talep silinsin mi?", "Onay", MessageBoxButtons.YesNo);
-
-                    if (result == DialogResult.Yes)
-                    {
-                        DatabaseHelper.DeleteTicket(createdAt);
-                        listBoxTickets.Items.Remove(listBoxTickets.SelectedItem);
-                        MessageBox.Show("Talep başarıyla silindi.");
-                    }
+                    MessageBox.Show("Lütfen açıklama alanını doldurun.", "Eksik Açıklama");
+                    return;
                 }
-                else
+
+                if (desc.Length > 300)
                 {
-                    MessageBox.Show("Tarih ayrıştırılamadı, silme işlemi başarısız oldu.", "Hata");
+                    MessageBox.Show("Açıklama en fazla 300 karakter olabilir.", "Fazla Uzun");
+                    return;
+                }
+
+                // Kullanıcıya onay sor
+                DialogResult result = MessageBox.Show("Bu talebi göndermek istediğinize emin misiniz?", "Onay", MessageBoxButtons.YesNo);
+                if (result == DialogResult.No)
+                    return;
+
+                // Yeni kayıt oluştur
+                var ticket = new Ticket
+                {
+                    Area = comboBoxArea.SelectedItem.ToString(),
+                    Issue = comboBoxIssue.SelectedItem.ToString(),
+                    Description = desc,
+                    CreatedAt = DateTime.Now
+                };
+
+                DatabaseHelper.InsertTicket(ticket); // Veritabanına ekle
+                listBoxTickets.Items.Insert(0, $"[{ticket.CreatedAt}] {ticket.Area} - {ticket.Issue}");
+
+                // Form temizlenir
+                comboBoxIssue.SelectedIndex = -1;
+                textBoxDescription.Clear();
+
+                MessageBox.Show("Talep başarıyla gönderildi.", "Başarılı");
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                MessageBox.Show("Talep gönderilirken hata oluştu.", "Hata");
+            }
+        }
+
+        /// <summary>
+        /// Günlük otomatik olarak çözümlenmiş ticket'ları arşivler ve siler
+        /// </summary>
+        private void DailyCleanupTimer_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                var resolvedTickets = DatabaseHelper.GetResolvedTickets();
+                if (resolvedTickets.Count > 0)
+                {
+                    var archiveFile = $"resolved_{DateTime.Now:yyyyMMdd_HHmmss}.db";
+                    DatabaseHelper.ArchiveTickets(resolvedTickets, archiveFile);
+                    DatabaseHelper.DeleteResolvedTickets();
                 }
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                MessageBox.Show("Silme sırasında hata oluştu.", "Hata");
             }
         }
 
-
-        private void comboBoxArea_SelectedIndexChanged_1(object sender, EventArgs e)
-        {
-
-        }
+        // Gereksiz event - kullanılmıyor ama Form1.Designer.cs'de bağlı
+        private void comboBoxArea_SelectedIndexChanged_1(object sender, EventArgs e) { }
     }
 }
