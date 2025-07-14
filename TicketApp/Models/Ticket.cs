@@ -3,38 +3,37 @@
 namespace TicketApp.Models
 {
     /// <summary>
-    /// Kullanıcının oluşturduğu destek talebini temsil eden sınıf.
+    /// Ticket sınıfı, kullanıcıdan alınan destek taleplerini temsil eder.
     /// </summary>
     public class Ticket
     {
         /// <summary>
-        /// Veritabanı için otomatik artan kimlik (ID).
+        /// Veritabanındaki otomatik artan kimlik numarası
         /// </summary>
         public int Id { get; set; }
 
         /// <summary>
-        /// Sorunun yaşandığı alan (örneğin: UAP-1, FES).
+        /// Hangi bölümden (UAP-1, FES vs.) talep geldiği
         /// </summary>
         public string Area { get; set; }
 
         /// <summary>
-        /// Sorunun tipi (örneğin: Mouse bozuldu, SAP donuyor).
+        /// Hangi sorunla ilgili talep açıldığı (örneğin: "Mouse bozuldu")
         /// </summary>
         public string Issue { get; set; }
 
         /// <summary>
-        /// Kullanıcı tarafından açıklama girilebilir.
+        /// Kullanıcının isteğe dair yazdığı açıklama (300 karaktere kadar)
         /// </summary>
         public string Description { get; set; }
 
         /// <summary>
-        /// Talebin oluşturulma zamanı.
+        /// Talebin oluşturulma zamanı (kayıt tarihi)
         /// </summary>
         public DateTime CreatedAt { get; set; }
 
         /// <summary>
-        /// Talebin çözülüp çözülmediğini belirten bayrak.
-        /// false: çözülmedi, true: çözüldü.
+        /// Talep çözüldü mü? (false = çözülmedi, true = çözüldü)
         /// </summary>
         public bool IsResolved { get; set; } = false;
     }

@@ -21,10 +21,11 @@ namespace TicketApp.Helpers
                 if (!File.Exists(dbPath))
                     SQLiteConnection.CreateFile(dbPath);
 
-                var conn = new SQLiteConnection(connectionString);
-                conn.Open();
+                using (var conn = new SQLiteConnection(connectionString))
+                {
+                    conn.Open();
 
-                string createQuery = @"
+                    string createQuery = @"
                     CREATE TABLE IF NOT EXISTS Tickets (
                         Id INTEGER PRIMARY KEY AUTOINCREMENT,
                         Area TEXT,
@@ -34,8 +35,9 @@ namespace TicketApp.Helpers
                         IsResolved INTEGER DEFAULT 0
                     );";
 
-                var cmd = new SQLiteCommand(createQuery, conn);
-                cmd.ExecuteNonQuery();
+                    var cmd = new SQLiteCommand(createQuery, conn);
+                    cmd.ExecuteNonQuery();
+                }
             }
             catch (Exception ex)
             {
@@ -123,7 +125,8 @@ namespace TicketApp.Helpers
                     Area = reader["Area"].ToString(),
                     Issue = reader["Issue"].ToString(),
                     Description = reader["Description"].ToString(),
-                    CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString())
+                    CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString()),
+                    IsResolved = Convert.ToBoolean(reader["IsResolved"])
                 });
             }
 
