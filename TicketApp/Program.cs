@@ -16,7 +16,8 @@ namespace TicketApp
             // Varsayılan yazı tiplerinin uyumluluğu sağlanır
             Application.SetCompatibleTextRenderingDefault(false);
             // Uygulamanın ana formu başlatılır
-            Application.Run(new LoginForm()); 
+            Application.Run(new MainForm());
+            Application.Run(new LoginForm());
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace TicketApp.Forms
+﻿//LoginForm.Designer.cs
+
+namespace TicketApp.Forms
 {
     partial class LoginForm
     {
@@ -23,41 +25,56 @@
         // Bileşenlerin form üzerine yerleştirildiği kısım
         private void InitializeComponent()
         {
-            // Bileşenlerin örnekleri oluşturuluyor
             this.txtUsername = new System.Windows.Forms.TextBox();
             this.txtPassword = new System.Windows.Forms.TextBox();
             this.btnLogin = new System.Windows.Forms.Button();
             this.lblUsername = new System.Windows.Forms.Label();
             this.lblPassword = new System.Windows.Forms.Label();
             this.SuspendLayout();
-
-            // Kullanıcı Adı Etiketi
-            this.lblUsername.Location = new System.Drawing.Point(30, 30);
-            this.lblUsername.Size = new System.Drawing.Size(100, 23);
-            this.lblUsername.Text = "Kullanıcı Adı:";
-
-            // Kullanıcı Adı TextBox
+            // 
+            // txtUsername
+            // 
             this.txtUsername.Location = new System.Drawing.Point(140, 30);
+            this.txtUsername.Name = "txtUsername";
             this.txtUsername.Size = new System.Drawing.Size(200, 20);
-
-            // Şifre Etiketi
-            this.lblPassword.Location = new System.Drawing.Point(30, 70);
-            this.lblPassword.Size = new System.Drawing.Size(100, 23);
-            this.lblPassword.Text = "Şifre:";
-
-            // Şifre TextBox
+            this.txtUsername.TabIndex = 1;
+            // 
+            // txtPassword
+            // 
             this.txtPassword.Location = new System.Drawing.Point(140, 70);
+            this.txtPassword.Name = "txtPassword";
+            this.txtPassword.PasswordChar = '*';
             this.txtPassword.Size = new System.Drawing.Size(200, 20);
-            this.txtPassword.PasswordChar = '*'; // Şifre gizlenir
-
-            // Giriş Butonu
+            this.txtPassword.TabIndex = 3;
+            // 
+            // btnLogin
+            // 
             this.btnLogin.Location = new System.Drawing.Point(140, 110);
+            this.btnLogin.Name = "btnLogin";
             this.btnLogin.Size = new System.Drawing.Size(200, 30);
+            this.btnLogin.TabIndex = 4;
             this.btnLogin.Text = "Giriş Yap";
             this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
-
-            // LoginForm genel özellikleri
-            this.ClientSize = new System.Drawing.Size(400, 180);
+            // 
+            // lblUsername
+            // 
+            this.lblUsername.Location = new System.Drawing.Point(30, 30);
+            this.lblUsername.Name = "lblUsername";
+            this.lblUsername.Size = new System.Drawing.Size(100, 23);
+            this.lblUsername.TabIndex = 0;
+            this.lblUsername.Text = "Kullanıcı Adı:";
+            // 
+            // lblPassword
+            // 
+            this.lblPassword.Location = new System.Drawing.Point(30, 70);
+            this.lblPassword.Name = "lblPassword";
+            this.lblPassword.Size = new System.Drawing.Size(100, 23);
+            this.lblPassword.TabIndex = 2;
+            this.lblPassword.Text = "Şifre:";
+            // 
+            // LoginForm
+            // 
+            this.ClientSize = new System.Drawing.Size(596, 354);
             this.Controls.Add(this.lblUsername);
             this.Controls.Add(this.txtUsername);
             this.Controls.Add(this.lblPassword);
@@ -67,7 +84,8 @@
             this.Text = "Admin Giriş Paneli";
             this.Load += new System.EventHandler(this.LoginForm_Load);
             this.ResumeLayout(false);
-            this.PerformLayout(); // Form öğelerini ekrana yerleştirir
+            this.PerformLayout();
+
         }
     }
 }

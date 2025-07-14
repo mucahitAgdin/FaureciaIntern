@@ -37,7 +37,6 @@ namespace TicketApp.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.comboBoxArea = new System.Windows.Forms.ComboBox();
             this.comboBoxIssue = new System.Windows.Forms.ComboBox();
             this.textBoxDescription = new System.Windows.Forms.TextBox();
@@ -47,97 +46,103 @@ namespace TicketApp.Forms
             this.labelIssue = new System.Windows.Forms.Label();
             this.labelDescription = new System.Windows.Forms.Label();
             this.labelHistory = new System.Windows.Forms.Label();
-
-            this.SuspendLayout(); // Performans için geçici olarak çizimi durdurur
-
-            //
-            // labelArea
-            //
-            this.labelArea.AutoSize = true;
-            this.labelArea.Location = new System.Drawing.Point(30, 30);
-            this.labelArea.Name = "labelArea";
-            this.labelArea.Size = new System.Drawing.Size(80, 20);
-            this.labelArea.Text = "Alan (UAP/FES):";
-
-            //
+            this.SuspendLayout();
+            // 
             // comboBoxArea
-            //
+            // 
             this.comboBoxArea.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxArea.FormattingEnabled = true;
-            this.comboBoxArea.Location = new System.Drawing.Point(150, 30);
+            this.comboBoxArea.Location = new System.Drawing.Point(100, 20);
+            this.comboBoxArea.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.comboBoxArea.Name = "comboBoxArea";
-            this.comboBoxArea.Size = new System.Drawing.Size(200, 28);
-
-            //
-            // labelIssue
-            //
-            this.labelIssue.AutoSize = true;
-            this.labelIssue.Location = new System.Drawing.Point(30, 70);
-            this.labelIssue.Name = "labelIssue";
-            this.labelIssue.Size = new System.Drawing.Size(100, 20);
-            this.labelIssue.Text = "Sorun Tipi:";
-
-            //
+            this.comboBoxArea.Size = new System.Drawing.Size(135, 21);
+            this.comboBoxArea.TabIndex = 1;
+            // 
             // comboBoxIssue
-            //
+            // 
             this.comboBoxIssue.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxIssue.FormattingEnabled = true;
-            this.comboBoxIssue.Location = new System.Drawing.Point(150, 70);
+            this.comboBoxIssue.Location = new System.Drawing.Point(100, 46);
+            this.comboBoxIssue.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.comboBoxIssue.Name = "comboBoxIssue";
-            this.comboBoxIssue.Size = new System.Drawing.Size(200, 28);
-
-            //
-            // labelDescription
-            //
-            this.labelDescription.AutoSize = true;
-            this.labelDescription.Location = new System.Drawing.Point(30, 110);
-            this.labelDescription.Name = "labelDescription";
-            this.labelDescription.Size = new System.Drawing.Size(85, 20);
-            this.labelDescription.Text = "Açıklama:";
-
-            //
+            this.comboBoxIssue.Size = new System.Drawing.Size(135, 21);
+            this.comboBoxIssue.TabIndex = 3;
+            // 
             // textBoxDescription
-            //
-            this.textBoxDescription.Location = new System.Drawing.Point(150, 110);
+            // 
+            this.textBoxDescription.Location = new System.Drawing.Point(100, 72);
+            this.textBoxDescription.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textBoxDescription.MaxLength = 300;
             this.textBoxDescription.Multiline = true;
             this.textBoxDescription.Name = "textBoxDescription";
-            this.textBoxDescription.Size = new System.Drawing.Size(300, 100);
-            this.textBoxDescription.MaxLength = 300; // Açıklama 300 karakter ile sınırlı
-
-            //
+            this.textBoxDescription.Size = new System.Drawing.Size(201, 66);
+            this.textBoxDescription.TabIndex = 5;
+            // 
             // btnSubmit
-            //
-            this.btnSubmit.Location = new System.Drawing.Point(150, 220);
+            // 
+            this.btnSubmit.Location = new System.Drawing.Point(100, 143);
+            this.btnSubmit.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.btnSubmit.Name = "btnSubmit";
-            this.btnSubmit.Size = new System.Drawing.Size(120, 40);
+            this.btnSubmit.Size = new System.Drawing.Size(80, 26);
+            this.btnSubmit.TabIndex = 6;
             this.btnSubmit.Text = "Talebi Gönder";
             this.btnSubmit.UseVisualStyleBackColor = true;
-            this.btnSubmit.Click += new System.EventHandler(this.BtnSubmit_Click); // Tıklama eventi bağlanıyor
-
-            //
-            // labelHistory
-            //
-            this.labelHistory.AutoSize = true;
-            this.labelHistory.Location = new System.Drawing.Point(30, 280);
-            this.labelHistory.Name = "labelHistory";
-            this.labelHistory.Size = new System.Drawing.Size(136, 20);
-            this.labelHistory.Text = "Gönderilen Talepler:";
-
-            //
+            this.btnSubmit.Click += new System.EventHandler(this.BtnSubmit_Click);
+            // 
             // listBoxTickets
-            //
+            // 
             this.listBoxTickets.FormattingEnabled = true;
-            this.listBoxTickets.ItemHeight = 20;
-            this.listBoxTickets.Location = new System.Drawing.Point(30, 310);
+            this.listBoxTickets.Location = new System.Drawing.Point(20, 202);
+            this.listBoxTickets.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.listBoxTickets.Name = "listBoxTickets";
-            this.listBoxTickets.Size = new System.Drawing.Size(420, 140);
-
-            //
+            this.listBoxTickets.Size = new System.Drawing.Size(281, 82);
+            this.listBoxTickets.TabIndex = 8;
+            // 
+            // labelArea
+            // 
+            this.labelArea.AutoSize = true;
+            this.labelArea.Location = new System.Drawing.Point(20, 20);
+            this.labelArea.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labelArea.Name = "labelArea";
+            this.labelArea.Size = new System.Drawing.Size(87, 13);
+            this.labelArea.TabIndex = 0;
+            this.labelArea.Text = "Alan (UAP/FES):";
+            // 
+            // labelIssue
+            // 
+            this.labelIssue.AutoSize = true;
+            this.labelIssue.Location = new System.Drawing.Point(20, 46);
+            this.labelIssue.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labelIssue.Name = "labelIssue";
+            this.labelIssue.Size = new System.Drawing.Size(58, 13);
+            this.labelIssue.TabIndex = 2;
+            this.labelIssue.Text = "Sorun Tipi:";
+            // 
+            // labelDescription
+            // 
+            this.labelDescription.AutoSize = true;
+            this.labelDescription.Location = new System.Drawing.Point(20, 72);
+            this.labelDescription.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labelDescription.Name = "labelDescription";
+            this.labelDescription.Size = new System.Drawing.Size(53, 13);
+            this.labelDescription.TabIndex = 4;
+            this.labelDescription.Text = "Açıklama:";
+            // 
+            // labelHistory
+            // 
+            this.labelHistory.AutoSize = true;
+            this.labelHistory.Location = new System.Drawing.Point(20, 182);
+            this.labelHistory.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labelHistory.Name = "labelHistory";
+            this.labelHistory.Size = new System.Drawing.Size(102, 13);
+            this.labelHistory.TabIndex = 7;
+            this.labelHistory.Text = "Gönderilen Talepler:";
+            // 
             // MainForm
-            //
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(500, 480);
+            this.ClientSize = new System.Drawing.Size(518, 425);
             this.Controls.Add(this.labelArea);
             this.Controls.Add(this.comboBoxArea);
             this.Controls.Add(this.labelIssue);
@@ -148,12 +153,14 @@ namespace TicketApp.Forms
             this.Controls.Add(this.labelHistory);
             this.Controls.Add(this.listBoxTickets);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.Text = "IT Destek Talep Sistemi";
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.ResumeLayout(false);
-            this.PerformLayout(); // Tüm yerleşim işlemleri bittikten sonra yeniden çizimi başlatır
+            this.PerformLayout();
+
         }
     }
 }

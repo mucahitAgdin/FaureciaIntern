@@ -1,4 +1,5 @@
-﻿using System;
+﻿//Forms/LoginForm.cs
+using System;
 using System.Windows.Forms;
 using TicketApp.Helpers;
 
@@ -25,7 +26,7 @@ namespace TicketApp.Forms
             // Girilen bilgiler doğruysa admin paneli açılır
             if (enteredUsername == expectedUsername && enteredPassword == expectedPassword)
             {
-                AdminForm adminForm = new AdminForm();
+                AdminForm adminForm = new AdminForm(enteredUsername);
                 adminForm.Show();
                 this.Hide();
             }

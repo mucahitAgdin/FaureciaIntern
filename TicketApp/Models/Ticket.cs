@@ -1,4 +1,6 @@
-﻿using System;
+﻿//Models/Ticket.cs
+
+using System;
 
 namespace TicketApp.Models
 {
@@ -36,5 +38,9 @@ namespace TicketApp.Models
         /// Talep çözüldü mü? (false = çözülmedi, true = çözüldü)
         /// </summary>
         public bool IsResolved { get; set; } = false;
+
+        public string Status { get; set; } // "beklemede", "işlemde", "çözüldü"
+
+
     }
 }
