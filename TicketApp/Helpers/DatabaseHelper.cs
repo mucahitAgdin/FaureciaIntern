@@ -32,20 +32,69 @@ namespace TicketApp.Helpers
                 {
                     conn.Open();
 
-                    string createQuery = @"
-                    CREATE TABLE IF NOT EXISTS Tickets (
-                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        Area TEXT NOT NULL,
-                        Issue TEXT NOT NULL,
-                        Description TEXT NOT NULL,
-                        CreatedAt DATETIME NOT NULL,
-                        IsResolved INTEGER DEFAULT 0,
-                        Status TEXT DEFAULT 'Beklemede'
-                    );";
+                    // Önce tabloyu kontrol et
+                    string checkTableQuery = @"
+                        SELECT name FROM sqlite_master 
+                        WHERE type='table' AND name='Tickets';";
 
-                    using (var cmd = new SQLiteCommand(createQuery, conn))
+                    bool tableExists = false;
+                    using (var cmd = new SQLiteCommand(checkTableQuery, conn))
                     {
-                        cmd.ExecuteNonQuery();
+                        var result = cmd.ExecuteScalar();
+                        tableExists = result != null;
+                    }
+
+                    if (!tableExists)
+                    {
+                        // Yeni tablo oluştur
+                        string createQuery = @"
+                        CREATE TABLE Tickets (
+                            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            Area TEXT NOT NULL,
+                            Issue TEXT NOT NULL,
+                            Description TEXT NOT NULL,
+                            CreatedAt DATETIME NOT NULL,
+                            IsResolved INTEGER DEFAULT 0,
+                            Status TEXT DEFAULT 'beklemede',
+                            AssignedTo TEXT
+                        );";
+
+                        using (var cmd = new SQLiteCommand(createQuery, conn))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    else
+                    {
+                        // Mevcut tabloda AssignedTo kolonu var mı kontrol et
+                        string checkColumnQuery = @"
+                            PRAGMA table_info(Tickets);";
+
+                        bool hasAssignedTo = false;
+                        using (var cmd = new SQLiteCommand(checkColumnQuery, conn))
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                if (reader["name"].ToString() == "AssignedTo")
+                                {
+                                    hasAssignedTo = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // AssignedTo kolonu yoksa ekle
+                        if (!hasAssignedTo)
+                        {
+                            string addColumnQuery = @"
+                                ALTER TABLE Tickets ADD COLUMN AssignedTo TEXT;";
+
+                            using (var cmd = new SQLiteCommand(addColumnQuery, conn))
+                            {
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
                     }
                 }
             }
@@ -68,8 +117,8 @@ namespace TicketApp.Helpers
                     conn.Open();
 
                     string insertQuery = @"
-                        INSERT INTO Tickets (Area, Issue, Description, CreatedAt, Status, IsResolved)
-                        VALUES (@Area, @Issue, @Desc, @Date, @Status, @IsResolved);
+                        INSERT INTO Tickets (Area, Issue, Description, CreatedAt, Status, IsResolved, AssignedTo)
+                        VALUES (@Area, @Issue, @Desc, @Date, @Status, @IsResolved, @AssignedTo);
                         SELECT last_insert_rowid();";
 
                     using (var cmd = new SQLiteCommand(insertQuery, conn))
@@ -78,8 +127,9 @@ namespace TicketApp.Helpers
                         cmd.Parameters.AddWithValue("@Issue", ticket.Issue);
                         cmd.Parameters.AddWithValue("@Desc", ticket.Description);
                         cmd.Parameters.AddWithValue("@Date", ticket.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
-                        cmd.Parameters.AddWithValue("@Status", ticket.Status ?? "Beklemede");
+                        cmd.Parameters.AddWithValue("@Status", ticket.Status ?? "beklemede");
                         cmd.Parameters.AddWithValue("@IsResolved", ticket.IsResolved ? 1 : 0);
+                        cmd.Parameters.AddWithValue("@AssignedTo", ticket.AssignedTo ?? (object)DBNull.Value);
 
                         ticket.Id = Convert.ToInt32(cmd.ExecuteScalar());
                     }
@@ -105,7 +155,7 @@ namespace TicketApp.Helpers
                 {
                     conn.Open();
 
-                    string query = "SELECT Id, Area, Issue, Description, CreatedAt, IsResolved, Status FROM Tickets ORDER BY CreatedAt DESC";
+                    string query = "SELECT Id, Area, Issue, Description, CreatedAt, IsResolved, Status, AssignedTo FROM Tickets ORDER BY CreatedAt DESC";
 
                     using (var cmd = new SQLiteCommand(query, conn))
                     using (var reader = cmd.ExecuteReader())
@@ -120,7 +170,8 @@ namespace TicketApp.Helpers
                                 Description = reader["Description"].ToString(),
                                 CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString()),
                                 IsResolved = Convert.ToBoolean(reader["IsResolved"]),
-                                Status = reader["Status"].ToString()
+                                Status = reader["Status"]?.ToString() ?? "beklemede",
+                                AssignedTo = reader["AssignedTo"] == DBNull.Value ? null : reader["AssignedTo"].ToString()
                             });
                         }
                     }
@@ -175,7 +226,7 @@ namespace TicketApp.Helpers
                 {
                     conn.Open();
 
-                    string query = "SELECT Id, Area, Issue, Description, CreatedAt, IsResolved, Status FROM Tickets WHERE IsResolved = 1";
+                    string query = "SELECT Id, Area, Issue, Description, CreatedAt, IsResolved, Status, AssignedTo FROM Tickets WHERE IsResolved = 1";
 
                     using (var cmd = new SQLiteCommand(query, conn))
                     using (var reader = cmd.ExecuteReader())
@@ -190,7 +241,8 @@ namespace TicketApp.Helpers
                                 Description = reader["Description"].ToString(),
                                 CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString()),
                                 IsResolved = Convert.ToBoolean(reader["IsResolved"]),
-                                Status = reader["Status"].ToString()
+                                Status = reader["Status"]?.ToString() ?? "beklemede",
+                                AssignedTo = reader["AssignedTo"] == DBNull.Value ? null : reader["AssignedTo"].ToString()
                             });
                         }
                     }
@@ -259,6 +311,7 @@ namespace TicketApp.Helpers
                             Description TEXT NOT NULL,
                             CreatedAt DATETIME NOT NULL,
                             Status TEXT NOT NULL,
+                            AssignedTo TEXT,
                             ArchivedAt DATETIME DEFAULT CURRENT_TIMESTAMP
                         );";
 
@@ -268,8 +321,8 @@ namespace TicketApp.Helpers
                     foreach (var ticket in tickets)
                     {
                         string insertQuery = @"
-                            INSERT INTO Tickets (Id, Area, Issue, Description, CreatedAt, Status) 
-                            VALUES (@id, @area, @issue, @desc, @created, @status)";
+                            INSERT INTO Tickets (Id, Area, Issue, Description, CreatedAt, Status, AssignedTo) 
+                            VALUES (@id, @area, @issue, @desc, @created, @status, @assigned)";
 
                         using (var cmd = new SQLiteCommand(insertQuery, conn))
                         {
@@ -279,6 +332,7 @@ namespace TicketApp.Helpers
                             cmd.Parameters.AddWithValue("@desc", ticket.Description);
                             cmd.Parameters.AddWithValue("@created", ticket.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
                             cmd.Parameters.AddWithValue("@status", ticket.Status);
+                            cmd.Parameters.AddWithValue("@assigned", ticket.AssignedTo ?? (object)DBNull.Value);
                             cmd.ExecuteNonQuery();
                         }
                     }
@@ -294,32 +348,83 @@ namespace TicketApp.Helpers
         /// <summary>
         /// Ticket'ın durum bilgisini günceller.
         /// </summary>
-        public static void UpdateTicketStatus(Ticket ticket)
+        // DatabaseHelper.cs dosyasına eklenecek metot
+
+        /// <summary>
+        /// Ticket durumunu ve atama bilgisini günceller
+        /// </summary>
+        /// <param name="ticket">Güncellenecek ticket</param>
+        /// <returns>Güncelleme başarılı ise true</returns>
+        public static bool UpdateTicketStatus(Ticket ticket)
         {
             try
             {
-                using (var conn = new SQLiteConnection(connectionString))
+                string query = @"
+            UPDATE Tickets 
+            SET Status = @Status, 
+                AssignedTo = @AssignedTo,
+                UpdatedAt = @UpdatedAt
+            WHERE Id = @Id";
+
+                using (var connection = new SQLiteConnection(connectionString))
                 {
-                    conn.Open();
+                    connection.Open();
 
-                    string query = @"
-                        UPDATE Tickets 
-                        SET Status = @Status, IsResolved = @IsResolved 
-                        WHERE Id = @Id";
-
-                    using (var cmd = new SQLiteCommand(query, conn))
+                    using (var command = new SQLiteCommand(query, connection))
                     {
-                        cmd.Parameters.AddWithValue("@Status", ticket.Status);
-                        cmd.Parameters.AddWithValue("@IsResolved", ticket.Status == "çözüldü" ? 1 : 0);
-                        cmd.Parameters.AddWithValue("@Id", ticket.Id);
-                        cmd.ExecuteNonQuery();
+                        command.Parameters.AddWithValue("@Status", ticket.Status);
+                        command.Parameters.AddWithValue("@AssignedTo", ticket.AssignedTo ?? (object)DBNull.Value);
+                        command.Parameters.AddWithValue("@UpdatedAt", DateTime.Now);
+                        command.Parameters.AddWithValue("@Id", ticket.Id);
+
+                        int rowsAffected = command.ExecuteNonQuery();
+                        return rowsAffected > 0;
                     }
                 }
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                throw new Exception("Ticket durumu güncellenirken hata oluştu", ex);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Ticket'ı belirli bir kişiye atar
+        /// </summary>
+        /// <param name="ticketId">Ticket ID</param>
+        /// <param name="assignedTo">Atanacak kişi</param>
+        /// <returns>Atama başarılı ise true</returns>
+        public static bool AssignTicket(int ticketId, string assignedTo)
+        {
+            try
+            {
+                string query = @"
+            UPDATE Tickets 
+            SET AssignedTo = @AssignedTo,
+                Status = 'işlemde',
+                UpdatedAt = @UpdatedAt
+            WHERE Id = @Id";
+
+                using (var connection = new SQLiteConnection(connectionString))
+                {
+                    connection.Open();
+
+                    using (var command = new SQLiteCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@AssignedTo", assignedTo);
+                        command.Parameters.AddWithValue("@UpdatedAt", DateTime.Now);
+                        command.Parameters.AddWithValue("@Id", ticketId);
+
+                        int rowsAffected = command.ExecuteNonQuery();
+                        return rowsAffected > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                return false;
             }
         }
     }

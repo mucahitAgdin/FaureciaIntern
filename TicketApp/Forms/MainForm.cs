@@ -40,21 +40,8 @@ namespace TicketApp.Forms
                 // Alan seçildiğinde ilgili sorunları yüklemek için event'e bağlan
                 comboBoxArea.SelectedIndexChanged += ComboBoxArea_SelectedIndexChanged;
 
-                // GENEL sorunlar (tüm alanlar için ortak sorunlar)
-                issueMap["GENEL"] = new List<string>
-                {
-                    "Bilgisayar açılmıyor",
-                    "Mouse bozuldu",
-                    "Klavye çalışmıyor",
-                    "Yazıcıya kağıt sıkıştı",
-                    "Yazıcıya internet gitmiyor",
-                    "Yazıcı çalışmıyor"
-                };
-
-                // Özel alanlara ait özel sorunlar
-                issueMap["UAP-1"] = new List<string> { "SAP terminal donuyor", "Barkod yazıcı hatası" };
-                issueMap["UAP-2"] = new List<string> { "IP erişilemiyor" };
-                issueMap["FES"] = new List<string> { "PLC bağlantısı kesildi", "Etiket yazıcı çevrimdışı" };
+                // Sorun haritasını IssueCatalog üzerinden yükle
+                issueMap = IssueCatalog.GetIssueMap();
             }
             catch (Exception ex)
             {
@@ -83,15 +70,32 @@ namespace TicketApp.Forms
         {
             try
             {
+                // Null kontrolü ekle
+                if (comboBoxArea.SelectedItem == null)
+                    return;
+
                 string selected = comboBoxArea.SelectedItem.ToString();
+
+                // ComboBox'ı temizle
                 comboBoxIssue.Items.Clear();
 
+                // issueMap null kontrolü
+                if (issueMap == null)
+                {
+                    issueMap = IssueCatalog.GetIssueMap();
+                }
+
                 // Seçilen alana ait sorunlar varsa ekle
-                if (issueMap.ContainsKey(selected))
+                if (issueMap.ContainsKey(selected) && issueMap[selected] != null)
+                {
                     comboBoxIssue.Items.AddRange(issueMap[selected].ToArray());
+                }
 
                 // Genel sorunları da her zaman ekle
-                comboBoxIssue.Items.AddRange(issueMap["GENEL"].ToArray());
+                if (issueMap.ContainsKey("GENEL") && issueMap["GENEL"] != null)
+                {
+                    comboBoxIssue.Items.AddRange(issueMap["GENEL"].ToArray());
+                }
             }
             catch (Exception ex)
             {
@@ -123,6 +127,10 @@ namespace TicketApp.Forms
         {
             try
             {
+                // ListBox kontrolü
+                if (listBoxTickets == null)
+                    return;
+
                 listBoxTickets.Items.Clear();
                 var tickets = DatabaseHelper.GetAllTickets();
 
@@ -180,6 +188,13 @@ namespace TicketApp.Forms
                     return;
                 }
 
+                // textBoxDescription null kontrolü
+                if (textBoxDescription == null)
+                {
+                    MessageBox.Show("Açıklama alanı bulunamadı.", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
                 string description = textBoxDescription.Text.Trim();
 
                 if (string.IsNullOrWhiteSpace(description))
@@ -206,9 +221,12 @@ namespace TicketApp.Forms
                 if (result == DialogResult.No)
                     return;
 
-                // Butonu geçici olarak devre dışı bırak
-                btnSubmit.Enabled = false;
-                btnSubmit.Text = "Gönderiliyor...";
+                // Buton kontrolü
+                if (btnSubmit != null)
+                {
+                    btnSubmit.Enabled = false;
+                    btnSubmit.Text = "Gönderiliyor...";
+                }
 
                 var ticket = new Ticket
                 {
@@ -217,7 +235,8 @@ namespace TicketApp.Forms
                     Description = description,
                     CreatedAt = DateTime.Now,
                     IsResolved = false, // Yeni talep gönderildiğinde çözülmemiş olarak işaretlenir
-                    Status = "beklemede" // ÖNEMLİ: Yeni ticket'lar beklemede durumunda başlar
+                    Status = "beklemede", // ÖNEMLİ: Yeni ticket'lar beklemede durumunda başlar
+                    AssignedTo = null
                 };
 
                 DatabaseHelper.InsertTicket(ticket);
@@ -240,8 +259,11 @@ namespace TicketApp.Forms
                 );
 
                 // Butonu tekrar aktif et
-                btnSubmit.Enabled = true;
-                btnSubmit.Text = "Talebi Gönder";
+                if (btnSubmit != null)
+                {
+                    btnSubmit.Enabled = true;
+                    btnSubmit.Text = "Talebi Gönder";
+                }
             }
             catch (Exception ex)
             {
@@ -249,8 +271,11 @@ namespace TicketApp.Forms
                 MessageBox.Show("Talep gönderilirken hata oluştu. Lütfen log dosyasını kontrol edin.", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                 // Butonu tekrar aktif et
-                btnSubmit.Enabled = true;
-                btnSubmit.Text = "Talebi Gönder";
+                if (btnSubmit != null)
+                {
+                    btnSubmit.Enabled = true;
+                    btnSubmit.Text = "Talebi Gönder";
+                }
             }
         }
 
@@ -288,6 +313,11 @@ namespace TicketApp.Forms
             {
                 Logger.Log(ex);
             }
+        }
+
+        private void groupBoxHistory_Enter(object sender, EventArgs e)
+        {
+
         }
     }
 }

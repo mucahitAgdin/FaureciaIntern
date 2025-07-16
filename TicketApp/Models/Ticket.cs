@@ -41,6 +41,8 @@ namespace TicketApp.Models
 
         public string Status { get; set; } // "beklemede", "işlemde", "çözüldü"
 
+        public string AssignedTo { get; set; } 
+
 
     }
 }

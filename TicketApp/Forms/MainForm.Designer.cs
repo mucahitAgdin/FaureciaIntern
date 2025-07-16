@@ -47,33 +47,31 @@ namespace TicketApp.Forms
         private void InitializeComponent()
         {
             this.panelHeader = new System.Windows.Forms.Panel();
+            this.pictureBoxIcon = new System.Windows.Forms.PictureBox();
+            this.labelTitle = new System.Windows.Forms.Label();
             this.panelMain = new System.Windows.Forms.Panel();
             this.panelForm = new System.Windows.Forms.Panel();
-            this.panelHistory = new System.Windows.Forms.Panel();
             this.groupBoxNewTicket = new System.Windows.Forms.GroupBox();
-            this.groupBoxHistory = new System.Windows.Forms.GroupBox();
-            this.comboBoxArea = new System.Windows.Forms.ComboBox();
-            this.comboBoxIssue = new System.Windows.Forms.ComboBox();
-            this.textBoxDescription = new System.Windows.Forms.TextBox();
-            this.btnSubmit = new System.Windows.Forms.Button();
-            this.btnRefresh = new System.Windows.Forms.Button();
-            this.listBoxTickets = new System.Windows.Forms.ListBox();
             this.labelArea = new System.Windows.Forms.Label();
+            this.comboBoxArea = new System.Windows.Forms.ComboBox();
             this.labelIssue = new System.Windows.Forms.Label();
+            this.comboBoxIssue = new System.Windows.Forms.ComboBox();
             this.labelDescription = new System.Windows.Forms.Label();
-            this.labelTitle = new System.Windows.Forms.Label();
+            this.textBoxDescription = new System.Windows.Forms.TextBox();
             this.labelCharCount = new System.Windows.Forms.Label();
-            this.pictureBoxIcon = new System.Windows.Forms.PictureBox();
-
+            this.btnSubmit = new System.Windows.Forms.Button();
+            this.panelHistory = new System.Windows.Forms.Panel();
+            this.groupBoxHistory = new System.Windows.Forms.GroupBox();
+            this.listBoxTickets = new System.Windows.Forms.ListBox();
+            this.btnRefresh = new System.Windows.Forms.Button();
             this.panelHeader.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxIcon)).BeginInit();
             this.panelMain.SuspendLayout();
             this.panelForm.SuspendLayout();
-            this.panelHistory.SuspendLayout();
             this.groupBoxNewTicket.SuspendLayout();
+            this.panelHistory.SuspendLayout();
             this.groupBoxHistory.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxIcon)).BeginInit();
             this.SuspendLayout();
-
             // 
             // panelHeader
             // 
@@ -85,7 +83,6 @@ namespace TicketApp.Forms
             this.panelHeader.Name = "panelHeader";
             this.panelHeader.Size = new System.Drawing.Size(800, 60);
             this.panelHeader.TabIndex = 0;
-
             // 
             // pictureBoxIcon
             // 
@@ -95,8 +92,6 @@ namespace TicketApp.Forms
             this.pictureBoxIcon.Size = new System.Drawing.Size(30, 30);
             this.pictureBoxIcon.TabIndex = 1;
             this.pictureBoxIcon.TabStop = false;
-            //this.pictureBoxIcon.Paint += new System.Windows.Forms.PaintEventHandler(this.PictureBoxIcon_Paint);
-
             // 
             // labelTitle
             // 
@@ -105,10 +100,9 @@ namespace TicketApp.Forms
             this.labelTitle.ForeColor = System.Drawing.Color.White;
             this.labelTitle.Location = new System.Drawing.Point(55, 18);
             this.labelTitle.Name = "labelTitle";
-            this.labelTitle.Size = new System.Drawing.Size(241, 30);
+            this.labelTitle.Size = new System.Drawing.Size(252, 30);
             this.labelTitle.TabIndex = 0;
             this.labelTitle.Text = "IT Destek Talep Sistemi";
-
             // 
             // panelMain
             // 
@@ -121,7 +115,6 @@ namespace TicketApp.Forms
             this.panelMain.Padding = new System.Windows.Forms.Padding(10);
             this.panelMain.Size = new System.Drawing.Size(800, 490);
             this.panelMain.TabIndex = 1;
-
             // 
             // panelForm
             // 
@@ -131,17 +124,6 @@ namespace TicketApp.Forms
             this.panelForm.Name = "panelForm";
             this.panelForm.Size = new System.Drawing.Size(380, 470);
             this.panelForm.TabIndex = 0;
-
-            // 
-            // panelHistory
-            // 
-            this.panelHistory.Controls.Add(this.groupBoxHistory);
-            this.panelHistory.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelHistory.Location = new System.Drawing.Point(390, 10);
-            this.panelHistory.Name = "panelHistory";
-            this.panelHistory.Size = new System.Drawing.Size(400, 470);
-            this.panelHistory.TabIndex = 1;
-
             // 
             // groupBoxNewTicket
             // 
@@ -164,24 +146,6 @@ namespace TicketApp.Forms
             this.groupBoxNewTicket.TabIndex = 0;
             this.groupBoxNewTicket.TabStop = false;
             this.groupBoxNewTicket.Text = "🎫 Yeni Destek Talebi";
-
-            // 
-            // groupBoxHistory
-            // 
-            this.groupBoxHistory.BackColor = System.Drawing.Color.White;
-            this.groupBoxHistory.Controls.Add(this.listBoxTickets);
-            this.groupBoxHistory.Controls.Add(this.btnRefresh);
-            this.groupBoxHistory.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBoxHistory.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.groupBoxHistory.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
-            this.groupBoxHistory.Location = new System.Drawing.Point(0, 0);
-            this.groupBoxHistory.Name = "groupBoxHistory";
-            this.groupBoxHistory.Padding = new System.Windows.Forms.Padding(15);
-            this.groupBoxHistory.Size = new System.Drawing.Size(400, 470);
-            this.groupBoxHistory.TabIndex = 0;
-            this.groupBoxHistory.TabStop = false;
-            this.groupBoxHistory.Text = "📋 Talep Geçmişi";
-
             // 
             // labelArea
             // 
@@ -190,10 +154,9 @@ namespace TicketApp.Forms
             this.labelArea.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
             this.labelArea.Location = new System.Drawing.Point(18, 40);
             this.labelArea.Name = "labelArea";
-            this.labelArea.Size = new System.Drawing.Size(108, 15);
+            this.labelArea.Size = new System.Drawing.Size(106, 15);
             this.labelArea.TabIndex = 0;
             this.labelArea.Text = "🏢 Alan (UAP/FES):";
-
             // 
             // comboBoxArea
             // 
@@ -204,7 +167,6 @@ namespace TicketApp.Forms
             this.comboBoxArea.Name = "comboBoxArea";
             this.comboBoxArea.Size = new System.Drawing.Size(335, 23);
             this.comboBoxArea.TabIndex = 1;
-
             // 
             // labelIssue
             // 
@@ -213,10 +175,9 @@ namespace TicketApp.Forms
             this.labelIssue.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
             this.labelIssue.Location = new System.Drawing.Point(18, 100);
             this.labelIssue.Name = "labelIssue";
-            this.labelIssue.Size = new System.Drawing.Size(78, 15);
+            this.labelIssue.Size = new System.Drawing.Size(79, 15);
             this.labelIssue.TabIndex = 2;
             this.labelIssue.Text = "⚠️ Sorun Tipi:";
-
             // 
             // comboBoxIssue
             // 
@@ -227,7 +188,6 @@ namespace TicketApp.Forms
             this.comboBoxIssue.Name = "comboBoxIssue";
             this.comboBoxIssue.Size = new System.Drawing.Size(335, 23);
             this.comboBoxIssue.TabIndex = 3;
-
             // 
             // labelDescription
             // 
@@ -236,10 +196,9 @@ namespace TicketApp.Forms
             this.labelDescription.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
             this.labelDescription.Location = new System.Drawing.Point(18, 160);
             this.labelDescription.Name = "labelDescription";
-            this.labelDescription.Size = new System.Drawing.Size(149, 15);
+            this.labelDescription.Size = new System.Drawing.Size(167, 15);
             this.labelDescription.TabIndex = 4;
             this.labelDescription.Text = "📝 Detaylı Açıklama (Max 300):";
-
             // 
             // textBoxDescription
             // 
@@ -251,8 +210,6 @@ namespace TicketApp.Forms
             this.textBoxDescription.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textBoxDescription.Size = new System.Drawing.Size(335, 120);
             this.textBoxDescription.TabIndex = 5;
-            //this.textBoxDescription.TextChanged += new System.EventHandler(this.TextBoxDescription_TextChanged);
-
             // 
             // labelCharCount
             // 
@@ -261,10 +218,9 @@ namespace TicketApp.Forms
             this.labelCharCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(127)))), ((int)(((byte)(140)))), ((int)(((byte)(141)))));
             this.labelCharCount.Location = new System.Drawing.Point(310, 305);
             this.labelCharCount.Name = "labelCharCount";
-            this.labelCharCount.Size = new System.Drawing.Size(44, 13);
+            this.labelCharCount.Size = new System.Drawing.Size(41, 13);
             this.labelCharCount.TabIndex = 6;
             this.labelCharCount.Text = "0 / 300";
-
             // 
             // btnSubmit
             // 
@@ -280,20 +236,41 @@ namespace TicketApp.Forms
             this.btnSubmit.Text = "📤 Talebi Gönder";
             this.btnSubmit.UseVisualStyleBackColor = false;
             this.btnSubmit.Click += new System.EventHandler(this.BtnSubmit_Click);
-            //this.btnSubmit.MouseEnter += new System.EventHandler(this.BtnSubmit_MouseEnter);
-            //this.btnSubmit.MouseLeave += new System.EventHandler(this.BtnSubmit_MouseLeave);
-
+            // 
+            // panelHistory
+            // 
+            this.panelHistory.Controls.Add(this.groupBoxHistory);
+            this.panelHistory.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelHistory.Location = new System.Drawing.Point(10, 10);
+            this.panelHistory.Name = "panelHistory";
+            this.panelHistory.Size = new System.Drawing.Size(780, 470);
+            this.panelHistory.TabIndex = 1;
+            // 
+            // groupBoxHistory
+            // 
+            this.groupBoxHistory.BackColor = System.Drawing.Color.White;
+            this.groupBoxHistory.Controls.Add(this.listBoxTickets);
+            this.groupBoxHistory.Controls.Add(this.btnRefresh);
+            this.groupBoxHistory.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBoxHistory.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.groupBoxHistory.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
+            this.groupBoxHistory.Location = new System.Drawing.Point(0, 0);
+            this.groupBoxHistory.Name = "groupBoxHistory";
+            this.groupBoxHistory.Padding = new System.Windows.Forms.Padding(15);
+            this.groupBoxHistory.Size = new System.Drawing.Size(780, 470);
+            this.groupBoxHistory.TabIndex = 0;
+            this.groupBoxHistory.TabStop = false;
+            this.groupBoxHistory.Text = "📋 Talep Geçmişi";
+            this.groupBoxHistory.Enter += new System.EventHandler(this.groupBoxHistory_Enter);
             // 
             // listBoxTickets
             // 
             this.listBoxTickets.Font = new System.Drawing.Font("Segoe UI", 8.5F);
             this.listBoxTickets.FormattingEnabled = true;
-            this.listBoxTickets.ItemHeight = 15;
             this.listBoxTickets.Location = new System.Drawing.Point(18, 30);
             this.listBoxTickets.Name = "listBoxTickets";
-            this.listBoxTickets.Size = new System.Drawing.Size(350, 364);
+            this.listBoxTickets.Size = new System.Drawing.Size(350, 355);
             this.listBoxTickets.TabIndex = 0;
-
             // 
             // btnRefresh
             // 
@@ -309,7 +286,6 @@ namespace TicketApp.Forms
             this.btnRefresh.Text = "🔄 Listeyi Yenile";
             this.btnRefresh.UseVisualStyleBackColor = false;
             this.btnRefresh.Click += new System.EventHandler(this.BtnRefresh_Click);
-
             // 
             // MainForm
             // 
@@ -325,17 +301,17 @@ namespace TicketApp.Forms
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "IT Destek Talep Sistemi";
             this.Load += new System.EventHandler(this.MainForm_Load);
-
             this.panelHeader.ResumeLayout(false);
             this.panelHeader.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxIcon)).EndInit();
             this.panelMain.ResumeLayout(false);
             this.panelForm.ResumeLayout(false);
-            this.panelHistory.ResumeLayout(false);
             this.groupBoxNewTicket.ResumeLayout(false);
             this.groupBoxNewTicket.PerformLayout();
+            this.panelHistory.ResumeLayout(false);
             this.groupBoxHistory.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxIcon)).EndInit();
             this.ResumeLayout(false);
+
         }
     }
 }

@@ -14,6 +14,7 @@ namespace TicketApp.Forms
         private string _username;
         private ContextMenuStrip statusContextMenu;
         private DataGridView currentGridView; // Hangi grid'de sağ tık yapıldığını takip etmek için
+        private List<string> supportTeam = new List<string> { "Burak Bey", "Kerem Bey", "Enver Bey", "Yavuz Bey" };
 
         public AdminForm(string username)
         {
@@ -29,29 +30,54 @@ namespace TicketApp.Forms
         {
             statusContextMenu = new ContextMenuStrip();
 
-            var bekleyenItem = new ToolStripMenuItem("Beklemede");
-            bekleyenItem.Click += (s, e) => ChangeTicketStatus("beklemede");
-            bekleyenItem.BackColor = Color.LightYellow;
+            // "İşleme Al" ana menüsü
+            var islemeAlSubMenu = new ToolStripMenuItem("İşleme Al →");
+            islemeAlSubMenu.BackColor = Color.LightBlue;
+            islemeAlSubMenu.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
 
-            var islemedeItem = new ToolStripMenuItem("İşlemde");
-            islemedeItem.Click += (s, e) => ChangeTicketStatus("işlemde");
-            islemedeItem.BackColor = Color.LightBlue;
+            // Her destek ekibi üyesi için alt menü oluştur
+            foreach (var person in supportTeam)
+            {
+                var personItem = new ToolStripMenuItem(person);
+                personItem.BackColor = Color.White;
+                personItem.ForeColor = Color.Black;
+                personItem.Click += (s, e) => AssignAndChangeStatus(person);
+                islemeAlSubMenu.DropDownItems.Add(personItem);
+            }
 
+            // "Çözüldü" menüsü
             var cozulduItem = new ToolStripMenuItem("Çözüldü");
             cozulduItem.Click += (s, e) => ChangeTicketStatus("çözüldü");
             cozulduItem.BackColor = Color.LightGreen;
+            cozulduItem.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
 
-            statusContextMenu.Items.AddRange(new ToolStripItem[] { bekleyenItem, islemedeItem, cozulduItem });
+            // "Beklemede" menüsü (isteğe bağlı)
+            var beklemedeyeAlItem = new ToolStripMenuItem("Beklemede");
+            beklemedeyeAlItem.Click += (s, e) => ChangeTicketStatus("beklemede");
+            beklemedeyeAlItem.BackColor = Color.LightYellow;
+            beklemedeyeAlItem.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+
+            // Menü öğelerini ekle
+            statusContextMenu.Items.AddRange(new ToolStripItem[] {
+                islemeAlSubMenu,
+                new ToolStripSeparator(),
+                cozulduItem,
+                beklemedeyeAlItem
+            });
+
+            // Context menü stilini ayarla
+            statusContextMenu.BackColor = Color.White;
+            statusContextMenu.ForeColor = Color.Black;
         }
 
         /// <summary>
-        /// Seçilen ticket'ın durumunu değiştirir
+        /// Ticket'ı belirli bir kişiye atar ve durumunu işlemde olarak değiştirir
         /// </summary>
-        private void ChangeTicketStatus(string newStatus)
+        private void AssignAndChangeStatus(string assignedPerson)
         {
             if (currentGridView == null || currentGridView.SelectedRows.Count == 0)
             {
-                MessageBox.Show("Lütfen bir ticket seçin.");
+                MessageBox.Show("Lütfen bir ticket seçin.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -62,22 +88,131 @@ namespace TicketApp.Forms
 
                 if (ticket != null)
                 {
-                    ticket.Status = newStatus;
-                    DatabaseHelper.UpdateTicketStatus(ticket);
-                    LoadTickets();
+                    // Önceki durumu kaydet
+                    string previousStatus = ticket.Status;
+                    string previousAssignee = ticket.AssignedTo ?? "Atanmamış";
 
-                    // Başarı mesajı
-                    string statusText = newStatus == "beklemede" ? "Beklemede" :
-                                       newStatus == "işlemde" ? "İşlemde" : "Çözüldü";
-                    MessageBox.Show($"Ticket durumu '{statusText}' olarak güncellendi.", "Başarılı",
-                                  MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // Atama yap ve durumu güncelle
+                    ticket.AssignedTo = assignedPerson;
+                    ticket.Status = "işlemde";
+
+                    // Veritabanını güncelle
+                    bool updateSuccess = DatabaseHelper.UpdateTicketStatus(ticket);
+
+                    if (updateSuccess)
+                    {
+                        // Grid'leri yenile
+                        LoadTickets();
+
+                        // Başarı mesajı göster
+                        MessageBox.Show(
+                            $"✅ Ticket başarıyla atandı!\n\n" +
+                            $"🎫 Ticket ID: #{ticket.Id}\n" +
+                            $"📝 Konu: {ticket.Issue}\n" +
+                            $"👤 Atanan Kişi: {assignedPerson}\n" +
+                            $"📊 Durum: İşlemde\n" +
+                            $"📧 Otomatik bildirim gönderildi.",
+                            "Atama Başarılı",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information
+                        );
+
+                        // Log kaydı
+                        Logger.Log($"Ticket #{ticket.Id} {assignedPerson} tarafından işleme alındı. Önceki durum: {previousStatus}");
+                    }
+                    else
+                    {
+                        // Hata durumunda eski değerleri geri yükle
+                        ticket.AssignedTo = previousAssignee == "Atanmamış" ? null : previousAssignee;
+                        ticket.Status = previousStatus;
+
+                        MessageBox.Show("Veritabanı güncellenirken hata oluştu. Lütfen tekrar deneyin.",
+                                      "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Ticket bulunamadı.", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                MessageBox.Show("Ticket durumu güncellenirken hata oluştu.", "Hata",
-                              MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Atama işlemi sırasında hata oluştu:\n{ex.Message}",
+                              "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Seçilen ticket'ın durumunu değiştirir
+        /// </summary>
+        private void ChangeTicketStatus(string newStatus)
+        {
+            if (currentGridView == null || currentGridView.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Lütfen bir ticket seçin.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                int ticketId = (int)currentGridView.SelectedRows[0].Cells[0].Value;
+                var ticket = ticketList.FirstOrDefault(t => t.Id == ticketId);
+
+                if (ticket != null)
+                {
+                    string previousStatus = ticket.Status;
+                    ticket.Status = newStatus;
+
+                    // Eğer beklemede yapılıyorsa atamayı kaldır
+                    if (newStatus == "beklemede")
+                    {
+                        ticket.AssignedTo = null;
+                    }
+
+                    bool updateSuccess = DatabaseHelper.UpdateTicketStatus(ticket);
+
+                    if (updateSuccess)
+                    {
+                        LoadTickets();
+
+                        // Başarı mesajı
+                        string statusText = newStatus == "beklemede" ? "Beklemede" :
+                                           newStatus == "işlemde" ? "İşlemde" : "Çözüldü";
+
+                        string emoji = newStatus == "beklemede" ? "⏳" :
+                                      newStatus == "işlemde" ? "⚙️" : "✅";
+
+                        MessageBox.Show(
+                            $"{emoji} Ticket durumu güncellendi!\n\n" +
+                            $"🎫 Ticket ID: #{ticket.Id}\n" +
+                            $"📝 Konu: {ticket.Issue}\n" +
+                            $"📊 Yeni Durum: {statusText}",
+                            "Güncelleme Başarılı",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information
+                        );
+
+                        Logger.Log($"Ticket #{ticket.Id} durumu '{previousStatus}' -> '{newStatus}' olarak güncellendi.");
+                    }
+                    else
+                    {
+                        // Hata durumunda eski değeri geri yükle
+                        ticket.Status = previousStatus;
+                        MessageBox.Show("Veritabanı güncellenirken hata oluştu. Lütfen tekrar deneyin.",
+                                      "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Ticket bulunamadı.", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                MessageBox.Show($"Ticket durumu güncellenirken hata oluştu:\n{ex.Message}",
+                              "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -88,6 +223,12 @@ namespace TicketApp.Forms
         {
             lblWelcome.Text = $"Hoş geldiniz, {_username}";
             LoadTickets();
+
+            // Tooltip'ler ekle
+            var toolTip = new ToolTip();
+            toolTip.SetToolTip(btnRefresh, "Ticket listesini yenile");
+            toolTip.SetToolTip(btnSettings, "Uygulama ayarları");
+            toolTip.SetToolTip(btnLogout, "Çıkış yap");
         }
 
         /// <summary>
@@ -112,19 +253,40 @@ namespace TicketApp.Forms
                 // Bekleyen ticket'ları yükle
                 foreach (var ticket in bekleyenTickets)
                 {
-                    dgvBekleyen.Rows.Add(ticket.Id, ticket.Area, ticket.Issue, ticket.CreatedAt.ToString("dd/MM/yyyy"));
+                    dgvBekleyen.Rows.Add(
+                        ticket.Id,
+                        ticket.Area,
+                        ticket.Issue,
+                        ticket.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                    );
                 }
 
-                // İşlemdeki ticket'ları yükle
+                // İşlemdeki ticket'ları yükle (atanan kişi bilgisi ile)
                 foreach (var ticket in islemedeTickets)
                 {
-                    dgvIslemde.Rows.Add(ticket.Id, ticket.Area, ticket.Issue, ticket.CreatedAt.ToString("dd/MM/yyyy"));
+                    string displayText = ticket.Issue;
+                    if (!string.IsNullOrEmpty(ticket.AssignedTo))
+                    {
+                        displayText += $" ({ticket.AssignedTo})";
+                    }
+
+                    dgvIslemde.Rows.Add(
+                        ticket.Id,
+                        ticket.Area,
+                        displayText,
+                        ticket.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                    );
                 }
 
                 // Çözülen ticket'ları yükle
                 foreach (var ticket in cozulenTickets)
                 {
-                    dgvCozulen.Rows.Add(ticket.Id, ticket.Area, ticket.Issue, ticket.CreatedAt.ToString("dd/MM/yyyy"));
+                    dgvCozulen.Rows.Add(
+                        ticket.Id,
+                        ticket.Area,
+                        ticket.Issue,
+                        ticket.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                    );
                 }
 
                 // Sayıları güncelle
@@ -132,11 +294,39 @@ namespace TicketApp.Forms
                 lblIslemdeCount.Text = $"İşlemde: {islemedeTickets.Count}";
                 lblCozulenCount.Text = $"Çözülen: {cozulenTickets.Count}";
                 lblTotalCount.Text = $"Toplam: {ticketList.Count}";
+
+                // Grid renklerini ayarla
+                UpdateGridColors();
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                MessageBox.Show("Ticket'lar yüklenemedi.", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Ticket'lar yüklenirken hata oluştu:\n{ex.Message}",
+                              "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Grid renklerini günceller
+        /// </summary>
+        private void UpdateGridColors()
+        {
+            // Bekleyen ticket'lar için sarı ton
+            foreach (DataGridViewRow row in dgvBekleyen.Rows)
+            {
+                row.DefaultCellStyle.BackColor = Color.FromArgb(255, 252, 240);
+            }
+
+            // İşlemdeki ticket'lar için mavi ton
+            foreach (DataGridViewRow row in dgvIslemde.Rows)
+            {
+                row.DefaultCellStyle.BackColor = Color.FromArgb(240, 248, 255);
+            }
+
+            // Çözülen ticket'lar için yeşil ton
+            foreach (DataGridViewRow row in dgvCozulen.Rows)
+            {
+                row.DefaultCellStyle.BackColor = Color.FromArgb(240, 255, 240);
             }
         }
 
@@ -155,16 +345,28 @@ namespace TicketApp.Forms
 
                     if (ticket != null)
                     {
+                        // Açıklama metnini güncelle
                         txtDescription.Text = ticket.Description;
-                        // Seçilen ticket bilgilerini göster
-                        lblSelectedTicket.Text = $"Seçilen Ticket: #{ticket.Id} - {ticket.Issue}";
+
+                        // Seçilen ticket bilgilerini detaylı şekilde göster
+                        string assignedInfo = string.IsNullOrEmpty(ticket.AssignedTo) ?
+                            "Atanmamış" : ticket.AssignedTo;
+
+                        lblSelectedTicket.Text = $"Seçilen Ticket: #{ticket.Id} - {ticket.Issue} " +
+                                               $"(Durum: {ticket.Status}, Atanan: {assignedInfo})";
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    txtDescription.Text = "";
-                    lblSelectedTicket.Text = "Seçilen Ticket: Yok";
+                    Logger.Log(ex);
+                    txtDescription.Text = "Ticket bilgileri yüklenirken hata oluştu.";
+                    lblSelectedTicket.Text = "Seçilen Ticket: Hata";
                 }
+            }
+            else
+            {
+                txtDescription.Text = "Bir ticket seçin...";
+                lblSelectedTicket.Text = "Seçilen Ticket: Yok";
             }
         }
 
@@ -183,6 +385,8 @@ namespace TicketApp.Forms
                     grid.ClearSelection();
                     grid.Rows[hit.RowIndex].Selected = true;
                     currentGridView = grid;
+
+                    // Context menüyü göster
                     statusContextMenu.Show(grid, e.Location);
                 }
             }
@@ -193,8 +397,16 @@ namespace TicketApp.Forms
         /// </summary>
         private void btnSettings_Click(object sender, EventArgs e)
         {
-            var settingsForm = new SettingsForm();
-            settingsForm.ShowDialog();
+            try
+            {
+                var settingsForm = new SettingsForm();
+                settingsForm.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                MessageBox.Show("Ayarlar formu açılamadı.", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         /// <summary>
@@ -202,7 +414,12 @@ namespace TicketApp.Forms
         /// </summary>
         private void btnLogout_Click(object sender, EventArgs e)
         {
-            this.Close();
+            var result = MessageBox.Show("Çıkış yapmak istediğinizden emin misiniz?",
+                                       "Çıkış Onayı", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (result == DialogResult.Yes)
+            {
+                this.Close();
+            }
         }
 
         /// <summary>
@@ -211,6 +428,7 @@ namespace TicketApp.Forms
         private void btnRefresh_Click(object sender, EventArgs e)
         {
             LoadTickets();
+            MessageBox.Show("Ticket listesi yenilendi.", "Bilgi", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         /// <summary>
@@ -221,11 +439,26 @@ namespace TicketApp.Forms
             if (dgvBekleyen.SelectedRows.Count > 0)
             {
                 currentGridView = dgvBekleyen;
-                ChangeTicketStatus("işlemde");
+
+                // Atama yapmadan sadece durum değiştir
+                var result = MessageBox.Show(
+                    "Ticket'ı işleme almak istiyor musunuz?\n\n" +
+                    "• Evet: Sadece durumu işleme al\n" +
+                    "• Hayır: Sağ tık menüsünden kişi seçin",
+                    "İşlem Seçin",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question
+                );
+
+                if (result == DialogResult.Yes)
+                {
+                    ChangeTicketStatus("işlemde");
+                }
             }
             else
             {
-                MessageBox.Show("Lütfen bekleyen ticket'lardan birini seçin.", "Bilgi");
+                MessageBox.Show("Lütfen bekleyen ticket'lardan birini seçin.", "Uyarı",
+                              MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
@@ -234,12 +467,29 @@ namespace TicketApp.Forms
             if (dgvIslemde.SelectedRows.Count > 0)
             {
                 currentGridView = dgvIslemde;
-                ChangeTicketStatus("çözüldü");
+
+                var result = MessageBox.Show(
+                    "Ticket'ı tamamlandı olarak işaretlemek istediğinizden emin misiniz?",
+                    "Tamamlama Onayı",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question
+                );
+
+                if (result == DialogResult.Yes)
+                {
+                    ChangeTicketStatus("çözüldü");
+                }
             }
             else
             {
-                MessageBox.Show("Lütfen işlemdeki ticket'lardan birini seçin.", "Bilgi");
+                MessageBox.Show("Lütfen işlemdeki ticket'lardan birini seçin.", "Uyarı",
+                              MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
+        }
+
+        private void dgvCozulen_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            // Çözülen ticket'lar için özel işlemler buraya eklenebilir
         }
     }
 }
