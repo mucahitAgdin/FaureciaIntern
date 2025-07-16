@@ -1,4 +1,5 @@
-﻿using System;
+﻿// Helpers/DatabaseHelper.cs
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
@@ -34,10 +35,10 @@ namespace TicketApp.Helpers
                     string createQuery = @"
                     CREATE TABLE IF NOT EXISTS Tickets (
                         Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        Area TEXT,
-                        Issue TEXT,
-                        Description TEXT,
-                        CreatedAt DATETIME,
+                        Area TEXT NOT NULL,
+                        Issue TEXT NOT NULL,
+                        Description TEXT NOT NULL,
+                        CreatedAt DATETIME NOT NULL,
                         IsResolved INTEGER DEFAULT 0,
                         Status TEXT DEFAULT 'Beklemede'
                     );";
@@ -50,8 +51,8 @@ namespace TicketApp.Helpers
             }
             catch (Exception ex)
             {
-                Logger.Log(ex); // Logger sınıfı varsa log kaydı al
-                throw;
+                Logger.Log(ex);
+                throw new Exception("Veritabanı başlatılamadı", ex);
             }
         }
 
@@ -60,23 +61,34 @@ namespace TicketApp.Helpers
         /// </summary>
         public static void InsertTicket(Ticket ticket)
         {
-            using (var conn = new SQLiteConnection(connectionString))
+            try
             {
-                conn.Open();
-
-                string insertQuery = @"
-                    INSERT INTO Tickets (Area, Issue, Description, CreatedAt, Status)
-                    VALUES (@Area, @Issue, @Desc, @Date, @Status);";
-
-                using (var cmd = new SQLiteCommand(insertQuery, conn))
+                using (var conn = new SQLiteConnection(connectionString))
                 {
-                    cmd.Parameters.AddWithValue("@Area", ticket.Area);
-                    cmd.Parameters.AddWithValue("@Issue", ticket.Issue);
-                    cmd.Parameters.AddWithValue("@Desc", ticket.Description);
-                    cmd.Parameters.AddWithValue("@Date", ticket.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
-                    cmd.Parameters.AddWithValue("@Status", ticket.Status ?? "Beklemede");
-                    cmd.ExecuteNonQuery();
+                    conn.Open();
+
+                    string insertQuery = @"
+                        INSERT INTO Tickets (Area, Issue, Description, CreatedAt, Status, IsResolved)
+                        VALUES (@Area, @Issue, @Desc, @Date, @Status, @IsResolved);
+                        SELECT last_insert_rowid();";
+
+                    using (var cmd = new SQLiteCommand(insertQuery, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@Area", ticket.Area);
+                        cmd.Parameters.AddWithValue("@Issue", ticket.Issue);
+                        cmd.Parameters.AddWithValue("@Desc", ticket.Description);
+                        cmd.Parameters.AddWithValue("@Date", ticket.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
+                        cmd.Parameters.AddWithValue("@Status", ticket.Status ?? "Beklemede");
+                        cmd.Parameters.AddWithValue("@IsResolved", ticket.IsResolved ? 1 : 0);
+
+                        ticket.Id = Convert.ToInt32(cmd.ExecuteScalar());
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                throw new Exception("Ticket eklenirken hata oluştu", ex);
             }
         }
 
@@ -87,49 +99,66 @@ namespace TicketApp.Helpers
         {
             var tickets = new List<Ticket>();
 
-            using (var conn = new SQLiteConnection(connectionString))
+            try
             {
-                conn.Open();
-
-                string query = "SELECT Area, Issue, Description, CreatedAt, IsResolved, Status FROM Tickets ORDER BY CreatedAt DESC";
-
-                using (var cmd = new SQLiteCommand(query, conn))
-                using (var reader = cmd.ExecuteReader())
+                using (var conn = new SQLiteConnection(connectionString))
                 {
-                    while (reader.Read())
+                    conn.Open();
+
+                    string query = "SELECT Id, Area, Issue, Description, CreatedAt, IsResolved, Status FROM Tickets ORDER BY CreatedAt DESC";
+
+                    using (var cmd = new SQLiteCommand(query, conn))
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        tickets.Add(new Ticket
+                        while (reader.Read())
                         {
-                            Area = reader["Area"].ToString(),
-                            Issue = reader["Issue"].ToString(),
-                            Description = reader["Description"].ToString(),
-                            CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString()),
-                            IsResolved = Convert.ToBoolean(reader["IsResolved"]),
-                            Status = reader["Status"].ToString()
-                        });
+                            tickets.Add(new Ticket
+                            {
+                                Id = Convert.ToInt32(reader["Id"]),
+                                Area = reader["Area"].ToString(),
+                                Issue = reader["Issue"].ToString(),
+                                Description = reader["Description"].ToString(),
+                                CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString()),
+                                IsResolved = Convert.ToBoolean(reader["IsResolved"]),
+                                Status = reader["Status"].ToString()
+                            });
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                throw new Exception("Ticketlar yüklenirken hata oluştu", ex);
             }
 
             return tickets;
         }
 
         /// <summary>
-        /// Belirli bir CreatedAt tarihine göre ticket siler.
+        /// Ticket ID'ye göre ticket siler.
         /// </summary>
-        public static void DeleteTicket(DateTime createdAt)
+        public static void DeleteTicket(int ticketId)
         {
-            using (var conn = new SQLiteConnection(connectionString))
+            try
             {
-                conn.Open();
-
-                string query = "DELETE FROM Tickets WHERE CreatedAt = @Date";
-
-                using (var cmd = new SQLiteCommand(query, conn))
+                using (var conn = new SQLiteConnection(connectionString))
                 {
-                    cmd.Parameters.AddWithValue("@Date", createdAt.ToString("yyyy-MM-dd HH:mm:ss"));
-                    cmd.ExecuteNonQuery();
+                    conn.Open();
+
+                    string query = "DELETE FROM Tickets WHERE Id = @Id";
+
+                    using (var cmd = new SQLiteCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@Id", ticketId);
+                        cmd.ExecuteNonQuery();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                throw new Exception("Ticket silinirken hata oluştu", ex);
             }
         }
 
@@ -140,28 +169,37 @@ namespace TicketApp.Helpers
         {
             var tickets = new List<Ticket>();
 
-            using (var conn = new SQLiteConnection(connectionString))
+            try
             {
-                conn.Open();
-
-                string query = "SELECT * FROM Tickets WHERE IsResolved = 1";
-
-                using (var cmd = new SQLiteCommand(query, conn))
-                using (var reader = cmd.ExecuteReader())
+                using (var conn = new SQLiteConnection(connectionString))
                 {
-                    while (reader.Read())
+                    conn.Open();
+
+                    string query = "SELECT Id, Area, Issue, Description, CreatedAt, IsResolved, Status FROM Tickets WHERE IsResolved = 1";
+
+                    using (var cmd = new SQLiteCommand(query, conn))
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        tickets.Add(new Ticket
+                        while (reader.Read())
                         {
-                            Area = reader["Area"].ToString(),
-                            Issue = reader["Issue"].ToString(),
-                            Description = reader["Description"].ToString(),
-                            CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString()),
-                            IsResolved = Convert.ToBoolean(reader["IsResolved"]),
-                            Status = reader["Status"].ToString()
-                        });
+                            tickets.Add(new Ticket
+                            {
+                                Id = Convert.ToInt32(reader["Id"]),
+                                Area = reader["Area"].ToString(),
+                                Issue = reader["Issue"].ToString(),
+                                Description = reader["Description"].ToString(),
+                                CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString()),
+                                IsResolved = Convert.ToBoolean(reader["IsResolved"]),
+                                Status = reader["Status"].ToString()
+                            });
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                throw new Exception("Çözülmüş ticketlar yüklenirken hata oluştu", ex);
             }
 
             return tickets;
@@ -172,16 +210,24 @@ namespace TicketApp.Helpers
         /// </summary>
         public static void DeleteResolvedTickets()
         {
-            using (var conn = new SQLiteConnection(connectionString))
+            try
             {
-                conn.Open();
-
-                string query = "DELETE FROM Tickets WHERE IsResolved = 1";
-
-                using (var cmd = new SQLiteCommand(query, conn))
+                using (var conn = new SQLiteConnection(connectionString))
                 {
-                    cmd.ExecuteNonQuery();
+                    conn.Open();
+
+                    string query = "DELETE FROM Tickets WHERE IsResolved = 1";
+
+                    using (var cmd = new SQLiteCommand(query, conn))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                throw new Exception("Çözülmüş ticketlar silinirken hata oluştu", ex);
             }
         }
 
@@ -190,61 +236,90 @@ namespace TicketApp.Helpers
         /// </summary>
         public static void ArchiveTickets(List<Ticket> tickets, string archiveFileName)
         {
-            string archivePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, archiveFileName);
-            SQLiteConnection.CreateFile(archivePath);
-
-            string archiveConnStr = $"Data Source={archivePath};Version=3;";
-
-            using (var conn = new SQLiteConnection(archiveConnStr))
+            try
             {
-                conn.Open();
+                string archiveFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "archive");
+                if (!Directory.Exists(archiveFolder))
+                    Directory.CreateDirectory(archiveFolder);
 
-                string createQuery = @"
-                    CREATE TABLE Tickets (
-                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        Area TEXT,
-                        Issue TEXT,
-                        Description TEXT,
-                        CreatedAt DATETIME,
-                        Status TEXT
-                    );";
+                string archivePath = Path.Combine(archiveFolder, archiveFileName);
+                SQLiteConnection.CreateFile(archivePath);
 
-                using (var cmd = new SQLiteCommand(createQuery, conn))
-                    cmd.ExecuteNonQuery();
+                string archiveConnStr = $"Data Source={archivePath};Version=3;";
 
-                foreach (var ticket in tickets)
+                using (var conn = new SQLiteConnection(archiveConnStr))
                 {
-                    string insertQuery = "INSERT INTO Tickets (Area, Issue, Description, CreatedAt, Status) VALUES (@a, @i, @d, @c, @s)";
-                    using (var cmd = new SQLiteCommand(insertQuery, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@a", ticket.Area);
-                        cmd.Parameters.AddWithValue("@i", ticket.Issue);
-                        cmd.Parameters.AddWithValue("@d", ticket.Description);
-                        cmd.Parameters.AddWithValue("@c", ticket.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
-                        cmd.Parameters.AddWithValue("@s", ticket.Status);
+                    conn.Open();
+
+                    string createQuery = @"
+                        CREATE TABLE Tickets (
+                            Id INTEGER PRIMARY KEY,
+                            Area TEXT NOT NULL,
+                            Issue TEXT NOT NULL,
+                            Description TEXT NOT NULL,
+                            CreatedAt DATETIME NOT NULL,
+                            Status TEXT NOT NULL,
+                            ArchivedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+                        );";
+
+                    using (var cmd = new SQLiteCommand(createQuery, conn))
                         cmd.ExecuteNonQuery();
+
+                    foreach (var ticket in tickets)
+                    {
+                        string insertQuery = @"
+                            INSERT INTO Tickets (Id, Area, Issue, Description, CreatedAt, Status) 
+                            VALUES (@id, @area, @issue, @desc, @created, @status)";
+
+                        using (var cmd = new SQLiteCommand(insertQuery, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@id", ticket.Id);
+                            cmd.Parameters.AddWithValue("@area", ticket.Area);
+                            cmd.Parameters.AddWithValue("@issue", ticket.Issue);
+                            cmd.Parameters.AddWithValue("@desc", ticket.Description);
+                            cmd.Parameters.AddWithValue("@created", ticket.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
+                            cmd.Parameters.AddWithValue("@status", ticket.Status);
+                            cmd.ExecuteNonQuery();
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                throw new Exception("Arşivleme sırasında hata oluştu", ex);
             }
         }
 
         /// <summary>
-        /// Ticket'ın durum bilgisini (Status) günceller.
+        /// Ticket'ın durum bilgisini günceller.
         /// </summary>
         public static void UpdateTicketStatus(Ticket ticket)
         {
-            using (var conn = new SQLiteConnection(connectionString))
+            try
             {
-                conn.Open();
-
-                string query = "UPDATE Tickets SET Status = @Status WHERE CreatedAt = @CreatedAt";
-
-                using (var cmd = new SQLiteCommand(query, conn))
+                using (var conn = new SQLiteConnection(connectionString))
                 {
-                    cmd.Parameters.AddWithValue("@Status", ticket.Status);
-                    cmd.Parameters.AddWithValue("@CreatedAt", ticket.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
-                    cmd.ExecuteNonQuery();
+                    conn.Open();
+
+                    string query = @"
+                        UPDATE Tickets 
+                        SET Status = @Status, IsResolved = @IsResolved 
+                        WHERE Id = @Id";
+
+                    using (var cmd = new SQLiteCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@Status", ticket.Status);
+                        cmd.Parameters.AddWithValue("@IsResolved", ticket.Status == "çözüldü" ? 1 : 0);
+                        cmd.Parameters.AddWithValue("@Id", ticket.Id);
+                        cmd.ExecuteNonQuery();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                throw new Exception("Ticket durumu güncellenirken hata oluştu", ex);
             }
         }
     }

@@ -1,8 +1,5 @@
 ﻿//Helpers/AppConfigReader.cs
 
-using Microsoft.Extensions.Configuration;
-using System.Configuration;
-
 namespace TicketApp.Helpers
 {
     /// <summary>

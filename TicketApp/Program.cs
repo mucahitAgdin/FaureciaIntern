@@ -1,23 +1,44 @@
-﻿// TicketApp/Program.cs
-// Uygulamanın giriş noktası
+﻿// Program.cs
 using System;
 using System.Windows.Forms;
-using TicketApp.Forms; // Ana form burada tanımlı
+using TicketApp.Forms;
+using TicketApp.Helpers;
 
 namespace TicketApp
 {
+    /// <summary>
+    /// Uygulamanın ana başlangıç noktası
+    /// </summary>
     internal static class Program
     {
-        [STAThread] // WinForms uygulamaları tek iş parçacıklı çalışır (Single-Threaded Apartment)
+        /// <summary>
+        /// Uygulamanın ana giriş noktası
+        /// </summary>
+        [STAThread]
         static void Main()
         {
-            // Uygulama için modern görsel stiller etkinleştirilir
             Application.EnableVisualStyles();
-            // Varsayılan yazı tiplerinin uyumluluğu sağlanır
             Application.SetCompatibleTextRenderingDefault(false);
-            // Uygulamanın ana formu başlatılır
-            Application.Run(new MainForm());
-            Application.Run(new LoginForm());
+
+            try
+            {
+                // Veritabanını başlat
+                DatabaseHelper.InitializeDatabase();
+
+                // Günlük temizlik yöneticisini başlat
+                var cleanupManager = new DailyCleanupManager();
+                cleanupManager.Start();
+
+                // Ana formu başlat
+                Application.Run(new MainForm());
+                Application.Run(new LoginForm());
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                MessageBox.Show("Uygulama başlatılırken kritik hata oluştu.", "Kritik Hata", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

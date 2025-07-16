@@ -107,17 +107,54 @@ namespace TicketApp.Forms
         {
             try
             {
-                var tickets = DatabaseHelper.GetAllTickets();
-
-                foreach (var ticket in tickets)
-                {
-                    listBoxTickets.Items.Add($"[{ticket.CreatedAt}] {ticket.Area} - {ticket.Issue}");
-                }
+                LoadTicketHistory();
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
                 MessageBox.Show("Kayıtlar yüklenemedi.", "Hata");
+            }
+        }
+
+        /// <summary>
+        /// Ticket geçmişini yükler
+        /// </summary>
+        private void LoadTicketHistory()
+        {
+            try
+            {
+                listBoxTickets.Items.Clear();
+                var tickets = DatabaseHelper.GetAllTickets();
+
+                // En yeni ticket'ları üstte göstermek için ters sırala
+                tickets.Reverse();
+
+                foreach (var ticket in tickets)
+                {
+                    string statusText = "";
+                    switch (ticket.Status?.ToLower())
+                    {
+                        case "beklemede":
+                            statusText = " [Beklemede]";
+                            break;
+                        case "işlemde":
+                            statusText = " [İşlemde]";
+                            break;
+                        case "çözüldü":
+                            statusText = " [Çözüldü]";
+                            break;
+                        default:
+                            statusText = " [Beklemede]";
+                            break;
+                    }
+
+                    listBoxTickets.Items.Add($"[{ticket.CreatedAt:dd/MM/yyyy HH:mm}] {ticket.Area} - {ticket.Issue}{statusText}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                MessageBox.Show("Ticket geçmişi yüklenemedi.", "Hata");
             }
         }
 
@@ -131,13 +168,15 @@ namespace TicketApp.Forms
             {
                 if (comboBoxArea.SelectedItem == null)
                 {
-                    MessageBox.Show("Lütfen bir alan (UAP/FES) seçin.", "Eksik Alan");
+                    MessageBox.Show("Lütfen bir alan (UAP/FES) seçin.", "Eksik Alan", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    comboBoxArea.Focus();
                     return;
                 }
 
                 if (comboBoxIssue.SelectedItem == null)
                 {
-                    MessageBox.Show("Lütfen bir sorun tipi seçin.", "Eksik Sorun");
+                    MessageBox.Show("Lütfen bir sorun tipi seçin.", "Eksik Sorun", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    comboBoxIssue.Focus();
                     return;
                 }
 
@@ -145,19 +184,31 @@ namespace TicketApp.Forms
 
                 if (string.IsNullOrWhiteSpace(description))
                 {
-                    MessageBox.Show("Lütfen açıklama girin.", "Eksik Açıklama");
+                    MessageBox.Show("Lütfen açıklama girin.", "Eksik Açıklama", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    textBoxDescription.Focus();
                     return;
                 }
 
                 if (description.Length > 300)
                 {
-                    MessageBox.Show("Açıklama 300 karakteri aşmamalı.", "Uzun Açıklama");
+                    MessageBox.Show("Açıklama 300 karakteri aşmamalı.", "Uzun Açıklama", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    textBoxDescription.Focus();
                     return;
                 }
 
-                DialogResult result = MessageBox.Show("Bu talebi göndermek istediğinize emin misiniz?", "Onay", MessageBoxButtons.YesNo);
+                DialogResult result = MessageBox.Show(
+                    "Bu talebi göndermek istediğinize emin misiniz?",
+                    "Talep Onayı",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question
+                );
+
                 if (result == DialogResult.No)
                     return;
+
+                // Butonu geçici olarak devre dışı bırak
+                btnSubmit.Enabled = false;
+                btnSubmit.Text = "Gönderiliyor...";
 
                 var ticket = new Ticket
                 {
@@ -165,22 +216,50 @@ namespace TicketApp.Forms
                     Issue = comboBoxIssue.SelectedItem.ToString(),
                     Description = description,
                     CreatedAt = DateTime.Now,
-                    IsResolved = false // Yeni talep gönderildiğinde çözülmemiş olarak işaretlenir
+                    IsResolved = false, // Yeni talep gönderildiğinde çözülmemiş olarak işaretlenir
+                    Status = "beklemede" // ÖNEMLİ: Yeni ticket'lar beklemede durumunda başlar
                 };
 
                 DatabaseHelper.InsertTicket(ticket);
 
-                listBoxTickets.Items.Insert(0, $"[{ticket.CreatedAt}] {ticket.Area} - {ticket.Issue}");
+                // Formu temizle
+                comboBoxArea.SelectedIndex = -1;
                 comboBoxIssue.SelectedIndex = -1;
+                comboBoxIssue.Items.Clear();
                 textBoxDescription.Clear();
 
-                MessageBox.Show("Talep başarıyla gönderildi.", "Başarılı");
+                // Ticket geçmişini yenile
+                LoadTicketHistory();
+
+                // Başarı mesajı
+                MessageBox.Show(
+                    "Talep başarıyla gönderildi!\nIT ekibi en kısa sürede talebinizle ilgilenecektir.",
+                    "Başarılı",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+
+                // Butonu tekrar aktif et
+                btnSubmit.Enabled = true;
+                btnSubmit.Text = "Talebi Gönder";
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                MessageBox.Show("Talep gönderilirken hata oluştu. Lütfen log dosyasını kontrol edin.", "Hata");
+                MessageBox.Show("Talep gönderilirken hata oluştu. Lütfen log dosyasını kontrol edin.", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                // Butonu tekrar aktif et
+                btnSubmit.Enabled = true;
+                btnSubmit.Text = "Talebi Gönder";
             }
+        }
+
+        /// <summary>
+        /// Yenile butonuna basıldığında ticket geçmişini yeniden yükler
+        /// </summary>
+        private void BtnRefresh_Click(object sender, EventArgs e)
+        {
+            LoadTicketHistory();
         }
 
         /// <summary>
