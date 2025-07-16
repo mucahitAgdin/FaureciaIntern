@@ -16,14 +16,22 @@ namespace TicketApp.Forms
         private System.Windows.Forms.GroupBox groupBoxNewTicket;
         private System.Windows.Forms.GroupBox groupBoxHistory;
         private System.Windows.Forms.ComboBox comboBoxArea;
+        private System.Windows.Forms.ComboBox comboBoxSubArea;
         private System.Windows.Forms.ComboBox comboBoxIssue;
         private System.Windows.Forms.TextBox textBoxDescription;
+        private System.Windows.Forms.TextBox textBoxFirstName;
+        private System.Windows.Forms.TextBox textBoxLastName;
+        private System.Windows.Forms.TextBox textBoxPhoneNumber;
         private System.Windows.Forms.Button btnSubmit;
         private System.Windows.Forms.Button btnRefresh;
         private System.Windows.Forms.ListBox listBoxTickets;
         private System.Windows.Forms.Label labelArea;
+        private System.Windows.Forms.Label labelSubArea;
         private System.Windows.Forms.Label labelIssue;
         private System.Windows.Forms.Label labelDescription;
+        private System.Windows.Forms.Label labelFirstName;
+        private System.Windows.Forms.Label labelLastName;
+        private System.Windows.Forms.Label labelPhoneNumber;
         private System.Windows.Forms.Label labelTitle;
         private System.Windows.Forms.Label labelCharCount;
         private System.Windows.Forms.PictureBox pictureBoxIcon;
@@ -54,11 +62,19 @@ namespace TicketApp.Forms
             this.groupBoxNewTicket = new System.Windows.Forms.GroupBox();
             this.labelArea = new System.Windows.Forms.Label();
             this.comboBoxArea = new System.Windows.Forms.ComboBox();
+            this.labelSubArea = new System.Windows.Forms.Label();
+            this.comboBoxSubArea = new System.Windows.Forms.ComboBox();
             this.labelIssue = new System.Windows.Forms.Label();
             this.comboBoxIssue = new System.Windows.Forms.ComboBox();
             this.labelDescription = new System.Windows.Forms.Label();
             this.textBoxDescription = new System.Windows.Forms.TextBox();
             this.labelCharCount = new System.Windows.Forms.Label();
+            this.labelFirstName = new System.Windows.Forms.Label();
+            this.textBoxFirstName = new System.Windows.Forms.TextBox();
+            this.labelLastName = new System.Windows.Forms.Label();
+            this.textBoxLastName = new System.Windows.Forms.TextBox();
+            this.labelPhoneNumber = new System.Windows.Forms.Label();
+            this.textBoxPhoneNumber = new System.Windows.Forms.TextBox();
             this.btnSubmit = new System.Windows.Forms.Button();
             this.panelHistory = new System.Windows.Forms.Panel();
             this.groupBoxHistory = new System.Windows.Forms.GroupBox();
@@ -81,7 +97,7 @@ namespace TicketApp.Forms
             this.panelHeader.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelHeader.Location = new System.Drawing.Point(0, 0);
             this.panelHeader.Name = "panelHeader";
-            this.panelHeader.Size = new System.Drawing.Size(800, 60);
+            this.panelHeader.Size = new System.Drawing.Size(900, 60);
             this.panelHeader.TabIndex = 0;
             // 
             // pictureBoxIcon
@@ -113,7 +129,7 @@ namespace TicketApp.Forms
             this.panelMain.Location = new System.Drawing.Point(0, 60);
             this.panelMain.Name = "panelMain";
             this.panelMain.Padding = new System.Windows.Forms.Padding(10);
-            this.panelMain.Size = new System.Drawing.Size(800, 490);
+            this.panelMain.Size = new System.Drawing.Size(900, 540);
             this.panelMain.TabIndex = 1;
             // 
             // panelForm
@@ -122,7 +138,7 @@ namespace TicketApp.Forms
             this.panelForm.Dock = System.Windows.Forms.DockStyle.Left;
             this.panelForm.Location = new System.Drawing.Point(10, 10);
             this.panelForm.Name = "panelForm";
-            this.panelForm.Size = new System.Drawing.Size(380, 470);
+            this.panelForm.Size = new System.Drawing.Size(430, 520);
             this.panelForm.TabIndex = 0;
             // 
             // groupBoxNewTicket
@@ -130,11 +146,19 @@ namespace TicketApp.Forms
             this.groupBoxNewTicket.BackColor = System.Drawing.Color.White;
             this.groupBoxNewTicket.Controls.Add(this.labelArea);
             this.groupBoxNewTicket.Controls.Add(this.comboBoxArea);
+            this.groupBoxNewTicket.Controls.Add(this.labelSubArea);
+            this.groupBoxNewTicket.Controls.Add(this.comboBoxSubArea);
             this.groupBoxNewTicket.Controls.Add(this.labelIssue);
             this.groupBoxNewTicket.Controls.Add(this.comboBoxIssue);
             this.groupBoxNewTicket.Controls.Add(this.labelDescription);
             this.groupBoxNewTicket.Controls.Add(this.textBoxDescription);
             this.groupBoxNewTicket.Controls.Add(this.labelCharCount);
+            this.groupBoxNewTicket.Controls.Add(this.labelFirstName);
+            this.groupBoxNewTicket.Controls.Add(this.textBoxFirstName);
+            this.groupBoxNewTicket.Controls.Add(this.labelLastName);
+            this.groupBoxNewTicket.Controls.Add(this.textBoxLastName);
+            this.groupBoxNewTicket.Controls.Add(this.labelPhoneNumber);
+            this.groupBoxNewTicket.Controls.Add(this.textBoxPhoneNumber);
             this.groupBoxNewTicket.Controls.Add(this.btnSubmit);
             this.groupBoxNewTicket.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBoxNewTicket.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
@@ -142,7 +166,7 @@ namespace TicketApp.Forms
             this.groupBoxNewTicket.Location = new System.Drawing.Point(0, 0);
             this.groupBoxNewTicket.Name = "groupBoxNewTicket";
             this.groupBoxNewTicket.Padding = new System.Windows.Forms.Padding(15);
-            this.groupBoxNewTicket.Size = new System.Drawing.Size(380, 470);
+            this.groupBoxNewTicket.Size = new System.Drawing.Size(430, 520);
             this.groupBoxNewTicket.TabIndex = 0;
             this.groupBoxNewTicket.TabStop = false;
             this.groupBoxNewTicket.Text = "🎫 Yeni Destek Talebi";
@@ -152,7 +176,7 @@ namespace TicketApp.Forms
             this.labelArea.AutoSize = true;
             this.labelArea.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.labelArea.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
-            this.labelArea.Location = new System.Drawing.Point(18, 40);
+            this.labelArea.Location = new System.Drawing.Point(18, 35);
             this.labelArea.Name = "labelArea";
             this.labelArea.Size = new System.Drawing.Size(106, 15);
             this.labelArea.TabIndex = 0;
@@ -163,20 +187,41 @@ namespace TicketApp.Forms
             this.comboBoxArea.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxArea.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.comboBoxArea.FormattingEnabled = true;
-            this.comboBoxArea.Location = new System.Drawing.Point(21, 60);
+            this.comboBoxArea.Location = new System.Drawing.Point(21, 53);
             this.comboBoxArea.Name = "comboBoxArea";
-            this.comboBoxArea.Size = new System.Drawing.Size(335, 23);
+            this.comboBoxArea.Size = new System.Drawing.Size(385, 23);
             this.comboBoxArea.TabIndex = 1;
+            // 
+            // labelSubArea
+            // 
+            this.labelSubArea.AutoSize = true;
+            this.labelSubArea.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.labelSubArea.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
+            this.labelSubArea.Location = new System.Drawing.Point(18, 85);
+            this.labelSubArea.Name = "labelSubArea";
+            this.labelSubArea.Size = new System.Drawing.Size(65, 15);
+            this.labelSubArea.TabIndex = 2;
+            this.labelSubArea.Text = "🏬 Alt Alan:";
+            // 
+            // comboBoxSubArea
+            // 
+            this.comboBoxSubArea.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxSubArea.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.comboBoxSubArea.FormattingEnabled = true;
+            this.comboBoxSubArea.Location = new System.Drawing.Point(21, 103);
+            this.comboBoxSubArea.Name = "comboBoxSubArea";
+            this.comboBoxSubArea.Size = new System.Drawing.Size(385, 23);
+            this.comboBoxSubArea.TabIndex = 3;
             // 
             // labelIssue
             // 
             this.labelIssue.AutoSize = true;
             this.labelIssue.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.labelIssue.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
-            this.labelIssue.Location = new System.Drawing.Point(18, 100);
+            this.labelIssue.Location = new System.Drawing.Point(18, 135);
             this.labelIssue.Name = "labelIssue";
             this.labelIssue.Size = new System.Drawing.Size(79, 15);
-            this.labelIssue.TabIndex = 2;
+            this.labelIssue.TabIndex = 4;
             this.labelIssue.Text = "⚠️ Sorun Tipi:";
             // 
             // comboBoxIssue
@@ -184,43 +229,103 @@ namespace TicketApp.Forms
             this.comboBoxIssue.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxIssue.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.comboBoxIssue.FormattingEnabled = true;
-            this.comboBoxIssue.Location = new System.Drawing.Point(21, 120);
+            this.comboBoxIssue.Location = new System.Drawing.Point(21, 153);
             this.comboBoxIssue.Name = "comboBoxIssue";
-            this.comboBoxIssue.Size = new System.Drawing.Size(335, 23);
-            this.comboBoxIssue.TabIndex = 3;
+            this.comboBoxIssue.Size = new System.Drawing.Size(385, 23);
+            this.comboBoxIssue.TabIndex = 5;
             // 
             // labelDescription
             // 
             this.labelDescription.AutoSize = true;
             this.labelDescription.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.labelDescription.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
-            this.labelDescription.Location = new System.Drawing.Point(18, 160);
+            this.labelDescription.Location = new System.Drawing.Point(18, 185);
             this.labelDescription.Name = "labelDescription";
             this.labelDescription.Size = new System.Drawing.Size(167, 15);
-            this.labelDescription.TabIndex = 4;
+            this.labelDescription.TabIndex = 6;
             this.labelDescription.Text = "📝 Detaylı Açıklama (Max 300):";
             // 
             // textBoxDescription
             // 
             this.textBoxDescription.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.textBoxDescription.Location = new System.Drawing.Point(21, 180);
+            this.textBoxDescription.Location = new System.Drawing.Point(21, 203);
             this.textBoxDescription.MaxLength = 300;
             this.textBoxDescription.Multiline = true;
             this.textBoxDescription.Name = "textBoxDescription";
             this.textBoxDescription.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBoxDescription.Size = new System.Drawing.Size(335, 120);
-            this.textBoxDescription.TabIndex = 5;
+            this.textBoxDescription.Size = new System.Drawing.Size(385, 80);
+            this.textBoxDescription.TabIndex = 7;
             // 
             // labelCharCount
             // 
             this.labelCharCount.AutoSize = true;
             this.labelCharCount.Font = new System.Drawing.Font("Segoe UI", 8F);
             this.labelCharCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(127)))), ((int)(((byte)(140)))), ((int)(((byte)(141)))));
-            this.labelCharCount.Location = new System.Drawing.Point(310, 305);
+            this.labelCharCount.Location = new System.Drawing.Point(360, 287);
             this.labelCharCount.Name = "labelCharCount";
             this.labelCharCount.Size = new System.Drawing.Size(41, 13);
-            this.labelCharCount.TabIndex = 6;
+            this.labelCharCount.TabIndex = 8;
             this.labelCharCount.Text = "0 / 300";
+            // 
+            // labelFirstName
+            // 
+            this.labelFirstName.AutoSize = true;
+            this.labelFirstName.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.labelFirstName.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
+            this.labelFirstName.Location = new System.Drawing.Point(18, 310);
+            this.labelFirstName.Name = "labelFirstName";
+            this.labelFirstName.Size = new System.Drawing.Size(43, 15);
+            this.labelFirstName.TabIndex = 9;
+            this.labelFirstName.Text = "👤 Ad:";
+            // 
+            // textBoxFirstName
+            // 
+            this.textBoxFirstName.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.textBoxFirstName.Location = new System.Drawing.Point(21, 328);
+            this.textBoxFirstName.MaxLength = 50;
+            this.textBoxFirstName.Name = "textBoxFirstName";
+            this.textBoxFirstName.Size = new System.Drawing.Size(185, 23);
+            this.textBoxFirstName.TabIndex = 10;
+            // 
+            // labelLastName
+            // 
+            this.labelLastName.AutoSize = true;
+            this.labelLastName.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.labelLastName.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
+            this.labelLastName.Location = new System.Drawing.Point(221, 310);
+            this.labelLastName.Name = "labelLastName";
+            this.labelLastName.Size = new System.Drawing.Size(62, 15);
+            this.labelLastName.TabIndex = 11;
+            this.labelLastName.Text = "👤 Soyad:";
+            // 
+            // textBoxLastName
+            // 
+            this.textBoxLastName.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.textBoxLastName.Location = new System.Drawing.Point(221, 328);
+            this.textBoxLastName.MaxLength = 50;
+            this.textBoxLastName.Name = "textBoxLastName";
+            this.textBoxLastName.Size = new System.Drawing.Size(185, 23);
+            this.textBoxLastName.TabIndex = 12;
+            // 
+            // labelPhoneNumber
+            // 
+            this.labelPhoneNumber.AutoSize = true;
+            this.labelPhoneNumber.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.labelPhoneNumber.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
+            this.labelPhoneNumber.Location = new System.Drawing.Point(18, 360);
+            this.labelPhoneNumber.Name = "labelPhoneNumber";
+            this.labelPhoneNumber.Size = new System.Drawing.Size(93, 15);
+            this.labelPhoneNumber.TabIndex = 13;
+            this.labelPhoneNumber.Text = "📞 Telefon No:";
+            // 
+            // textBoxPhoneNumber
+            // 
+            this.textBoxPhoneNumber.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.textBoxPhoneNumber.Location = new System.Drawing.Point(21, 378);
+            this.textBoxPhoneNumber.MaxLength = 20;
+            this.textBoxPhoneNumber.Name = "textBoxPhoneNumber";
+            this.textBoxPhoneNumber.Size = new System.Drawing.Size(385, 23);
+            this.textBoxPhoneNumber.TabIndex = 14;
             // 
             // btnSubmit
             // 
@@ -229,10 +334,10 @@ namespace TicketApp.Forms
             this.btnSubmit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSubmit.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnSubmit.ForeColor = System.Drawing.Color.White;
-            this.btnSubmit.Location = new System.Drawing.Point(21, 330);
+            this.btnSubmit.Location = new System.Drawing.Point(21, 420);
             this.btnSubmit.Name = "btnSubmit";
-            this.btnSubmit.Size = new System.Drawing.Size(335, 40);
-            this.btnSubmit.TabIndex = 7;
+            this.btnSubmit.Size = new System.Drawing.Size(385, 40);
+            this.btnSubmit.TabIndex = 15;
             this.btnSubmit.Text = "📤 Talebi Gönder";
             this.btnSubmit.UseVisualStyleBackColor = false;
             this.btnSubmit.Click += new System.EventHandler(this.BtnSubmit_Click);
@@ -241,9 +346,9 @@ namespace TicketApp.Forms
             // 
             this.panelHistory.Controls.Add(this.groupBoxHistory);
             this.panelHistory.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelHistory.Location = new System.Drawing.Point(10, 10);
+            this.panelHistory.Location = new System.Drawing.Point(450, 10);
             this.panelHistory.Name = "panelHistory";
-            this.panelHistory.Size = new System.Drawing.Size(780, 470);
+            this.panelHistory.Size = new System.Drawing.Size(440, 520);
             this.panelHistory.TabIndex = 1;
             // 
             // groupBoxHistory
@@ -257,7 +362,7 @@ namespace TicketApp.Forms
             this.groupBoxHistory.Location = new System.Drawing.Point(0, 0);
             this.groupBoxHistory.Name = "groupBoxHistory";
             this.groupBoxHistory.Padding = new System.Windows.Forms.Padding(15);
-            this.groupBoxHistory.Size = new System.Drawing.Size(780, 470);
+            this.groupBoxHistory.Size = new System.Drawing.Size(440, 520);
             this.groupBoxHistory.TabIndex = 0;
             this.groupBoxHistory.TabStop = false;
             this.groupBoxHistory.Text = "📋 Talep Geçmişi";
@@ -267,9 +372,10 @@ namespace TicketApp.Forms
             // 
             this.listBoxTickets.Font = new System.Drawing.Font("Segoe UI", 8.5F);
             this.listBoxTickets.FormattingEnabled = true;
+            this.listBoxTickets.ItemHeight = 15;
             this.listBoxTickets.Location = new System.Drawing.Point(18, 30);
             this.listBoxTickets.Name = "listBoxTickets";
-            this.listBoxTickets.Size = new System.Drawing.Size(350, 355);
+            this.listBoxTickets.Size = new System.Drawing.Size(404, 420);
             this.listBoxTickets.TabIndex = 0;
             // 
             // btnRefresh
@@ -279,9 +385,9 @@ namespace TicketApp.Forms
             this.btnRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRefresh.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             this.btnRefresh.ForeColor = System.Drawing.Color.White;
-            this.btnRefresh.Location = new System.Drawing.Point(18, 410);
+            this.btnRefresh.Location = new System.Drawing.Point(18, 465);
             this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(350, 35);
+            this.btnRefresh.Size = new System.Drawing.Size(404, 35);
             this.btnRefresh.TabIndex = 1;
             this.btnRefresh.Text = "🔄 Listeyi Yenile";
             this.btnRefresh.UseVisualStyleBackColor = false;
@@ -291,7 +397,7 @@ namespace TicketApp.Forms
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 550);
+            this.ClientSize = new System.Drawing.Size(900, 600);
             this.Controls.Add(this.panelMain);
             this.Controls.Add(this.panelHeader);
             this.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -311,7 +417,6 @@ namespace TicketApp.Forms
             this.panelHistory.ResumeLayout(false);
             this.groupBoxHistory.ResumeLayout(false);
             this.ResumeLayout(false);
-
         }
     }
 }

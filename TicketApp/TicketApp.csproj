@@ -248,6 +248,7 @@
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Helpers\AppConfigReader.cs" />
+    <Compile Include="Helpers\AreaCatalog.cs" />
     <Compile Include="Helpers\DailyCleanupManager.cs" />
     <Compile Include="Helpers\DatabaseHelper.cs" />
     <Compile Include="Helpers\IssueCatalog.cs" />

@@ -13,6 +13,9 @@ namespace TicketApp.Forms
         // Alanlara (bölgelere) göre sorun türlerini tutan sözlük yapısı
         private Dictionary<string, List<string>> issueMap = new Dictionary<string, List<string>>();
 
+        // Alan-alt alan haritası
+        private Dictionary<string, List<string>> areaSubAreaMap = new Dictionary<string, List<string>>();
+
         // Her 24 saatte bir arşivleme ve silme işlemi yapacak olan zamanlayıcı
         private System.Windows.Forms.Timer dailyCleanupTimer;
 
@@ -37,11 +40,22 @@ namespace TicketApp.Forms
                 // Alan (bölge) seçeneklerini combobox'a ekle
                 comboBoxArea.Items.AddRange(new string[] { "UAP-1", "UAP-2", "UAP-3", "UAP-4", "FES" });
 
-                // Alan seçildiğinde ilgili sorunları yüklemek için event'e bağlan
+                // Alan seçildiğinde ilgili alt alanları ve sorunları yüklemek için event'e bağlan
                 comboBoxArea.SelectedIndexChanged += ComboBoxArea_SelectedIndexChanged;
+                comboBoxSubArea.SelectedIndexChanged += ComboBoxSubArea_SelectedIndexChanged;
 
                 // Sorun haritasını IssueCatalog üzerinden yükle
                 issueMap = IssueCatalog.GetIssueMap();
+
+                // Alan-alt alan haritasını AreaCatalog üzerinden yükle
+                areaSubAreaMap = AreaCatalog.GetAreaSubAreaMap();
+
+                // Karakter sayacı için event
+                textBoxDescription.TextChanged += TextBoxDescription_TextChanged;
+
+                // Alt alan combobox'ını başlangıçta devre dışı bırak
+                comboBoxSubArea.Enabled = false;
+                comboBoxIssue.Enabled = false;
             }
             catch (Exception ex)
             {
@@ -63,8 +77,7 @@ namespace TicketApp.Forms
         }
 
         /// <summary>
-        /// Kullanıcı bir alan seçtiğinde, o alana özel sorunlar combobox'a yüklenir.
-        /// Ayrıca her zaman genel sorunlar da eklenir.
+        /// Kullanıcı bir alan seçtiğinde, o alana özel alt alanlar combobox'a yüklenir.
         /// </summary>
         private void ComboBoxArea_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -74,10 +87,54 @@ namespace TicketApp.Forms
                 if (comboBoxArea.SelectedItem == null)
                     return;
 
-                string selected = comboBoxArea.SelectedItem.ToString();
+                string selectedArea = comboBoxArea.SelectedItem.ToString();
 
-                // ComboBox'ı temizle
+                // Alt alan ComboBox'ı temizle ve aktif et
+                comboBoxSubArea.Items.Clear();
+                comboBoxSubArea.Enabled = true;
+                comboBoxSubArea.SelectedIndex = -1;
+
+                // Sorun ComboBox'ını temizle ve devre dışı bırak
                 comboBoxIssue.Items.Clear();
+                comboBoxIssue.Enabled = false;
+                comboBoxIssue.SelectedIndex = -1;
+
+                // areaSubAreaMap null kontrolü
+                if (areaSubAreaMap == null)
+                {
+                    areaSubAreaMap = AreaCatalog.GetAreaSubAreaMap();
+                }
+
+                // Seçilen alana ait alt alanlar varsa ekle
+                if (areaSubAreaMap.ContainsKey(selectedArea) && areaSubAreaMap[selectedArea] != null)
+                {
+                    comboBoxSubArea.Items.AddRange(areaSubAreaMap[selectedArea].ToArray());
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                MessageBox.Show("Alt alan listesi yüklenemedi. Lütfen logları kontrol edin.", "Hata");
+            }
+        }
+
+        /// <summary>
+        /// Alt alan seçildiğinde sorun listesini yükler
+        /// </summary>
+        private void ComboBoxSubArea_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                // Null kontrolü ekle
+                if (comboBoxArea.SelectedItem == null || comboBoxSubArea.SelectedItem == null)
+                    return;
+
+                string selectedArea = comboBoxArea.SelectedItem.ToString();
+
+                // Sorun ComboBox'ını temizle ve aktif et
+                comboBoxIssue.Items.Clear();
+                comboBoxIssue.Enabled = true;
+                comboBoxIssue.SelectedIndex = -1;
 
                 // issueMap null kontrolü
                 if (issueMap == null)
@@ -86,9 +143,9 @@ namespace TicketApp.Forms
                 }
 
                 // Seçilen alana ait sorunlar varsa ekle
-                if (issueMap.ContainsKey(selected) && issueMap[selected] != null)
+                if (issueMap.ContainsKey(selectedArea) && issueMap[selectedArea] != null)
                 {
-                    comboBoxIssue.Items.AddRange(issueMap[selected].ToArray());
+                    comboBoxIssue.Items.AddRange(issueMap[selectedArea].ToArray());
                 }
 
                 // Genel sorunları da her zaman ekle
@@ -101,6 +158,33 @@ namespace TicketApp.Forms
             {
                 Logger.Log(ex);
                 MessageBox.Show("Sorun listesi yüklenemedi. Lütfen logları kontrol edin.", "Hata");
+            }
+        }
+
+        /// <summary>
+        /// Açıklama alanında karakter sayacını günceller
+        /// </summary>
+        private void TextBoxDescription_TextChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                if (textBoxDescription != null && labelCharCount != null)
+                {
+                    int charCount = textBoxDescription.Text.Length;
+                    labelCharCount.Text = $"{charCount} / 300";
+
+                    // Karakter sınırına yaklaşırken renk değiştir
+                    if (charCount > 250)
+                        labelCharCount.ForeColor = System.Drawing.Color.Red;
+                    else if (charCount > 200)
+                        labelCharCount.ForeColor = System.Drawing.Color.Orange;
+                    else
+                        labelCharCount.ForeColor = System.Drawing.Color.FromArgb(127, 140, 141);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
             }
         }
 
@@ -134,9 +218,6 @@ namespace TicketApp.Forms
                 listBoxTickets.Items.Clear();
                 var tickets = DatabaseHelper.GetAllTickets();
 
-                // En yeni ticket'ları üstte göstermek için ters sırala
-                tickets.Reverse();
-
                 foreach (var ticket in tickets)
                 {
                     string statusText = "";
@@ -151,12 +232,18 @@ namespace TicketApp.Forms
                         case "çözüldü":
                             statusText = " [Çözüldü]";
                             break;
+                        case "reddedildi":
+                            statusText = " [Reddedildi]";
+                            break;
                         default:
                             statusText = " [Beklemede]";
                             break;
                     }
 
-                    listBoxTickets.Items.Add($"[{ticket.CreatedAt:dd/MM/yyyy HH:mm}] {ticket.Area} - {ticket.Issue}{statusText}");
+                    string subAreaText = !string.IsNullOrEmpty(ticket.SubArea) ? $" - {ticket.SubArea}" : "";
+                    string assignedText = !string.IsNullOrEmpty(ticket.AssignedTo) ? $" ({ticket.AssignedTo})" : "";
+
+                    listBoxTickets.Items.Add($"[{ticket.CreatedAt:dd/MM/yyyy HH:mm}] {ticket.Area}{subAreaText} - {ticket.Issue}{statusText}{assignedText}");
                 }
             }
             catch (Exception ex)
@@ -178,6 +265,13 @@ namespace TicketApp.Forms
                 {
                     MessageBox.Show("Lütfen bir alan (UAP/FES) seçin.", "Eksik Alan", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     comboBoxArea.Focus();
+                    return;
+                }
+
+                if (comboBoxSubArea.SelectedItem == null)
+                {
+                    MessageBox.Show("Lütfen bir alt alan seçin.", "Eksik Alt Alan", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    comboBoxSubArea.Focus();
                     return;
                 }
 
@@ -211,6 +305,32 @@ namespace TicketApp.Forms
                     return;
                 }
 
+                // Kişi bilgileri kontrolü
+                string firstName = textBoxFirstName.Text.Trim();
+                string lastName = textBoxLastName.Text.Trim();
+                string phoneNumber = textBoxPhoneNumber.Text.Trim();
+
+                if (string.IsNullOrWhiteSpace(firstName))
+                {
+                    MessageBox.Show("Lütfen adınızı girin.", "Eksik Ad", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    textBoxFirstName.Focus();
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(lastName))
+                {
+                    MessageBox.Show("Lütfen soyadınızı girin.", "Eksik Soyad", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    textBoxLastName.Focus();
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(phoneNumber))
+                {
+                    MessageBox.Show("Lütfen telefon numaranızı girin.", "Eksik Telefon", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    textBoxPhoneNumber.Focus();
+                    return;
+                }
+
                 DialogResult result = MessageBox.Show(
                     "Bu talebi göndermek istediğinize emin misiniz?",
                     "Talep Onayı",
@@ -231,8 +351,12 @@ namespace TicketApp.Forms
                 var ticket = new Ticket
                 {
                     Area = comboBoxArea.SelectedItem.ToString(),
+                    SubArea = comboBoxSubArea.SelectedItem.ToString(),
                     Issue = comboBoxIssue.SelectedItem.ToString(),
                     Description = description,
+                    FirstName = firstName,
+                    LastName = lastName,
+                    PhoneNumber = phoneNumber,
                     CreatedAt = DateTime.Now,
                     IsResolved = false, // Yeni talep gönderildiğinde çözülmemiş olarak işaretlenir
                     Status = "beklemede", // ÖNEMLİ: Yeni ticket'lar beklemede durumunda başlar
@@ -243,9 +367,16 @@ namespace TicketApp.Forms
 
                 // Formu temizle
                 comboBoxArea.SelectedIndex = -1;
+                comboBoxSubArea.SelectedIndex = -1;
                 comboBoxIssue.SelectedIndex = -1;
+                comboBoxSubArea.Items.Clear();
                 comboBoxIssue.Items.Clear();
+                comboBoxSubArea.Enabled = false;
+                comboBoxIssue.Enabled = false;
                 textBoxDescription.Clear();
+                textBoxFirstName.Clear();
+                textBoxLastName.Clear();
+                textBoxPhoneNumber.Clear();
 
                 // Ticket geçmişini yenile
                 LoadTicketHistory();
@@ -306,7 +437,8 @@ namespace TicketApp.Forms
                     // Veritabanından sil
                     DatabaseHelper.DeleteResolvedTickets();
 
-                    //Logger.Log($"Günlük temizlik: {resolvedTickets.Count} kayıt arşivlendi.");
+                    // Ticket geçmişini yenile
+                    LoadTicketHistory();
                 }
             }
             catch (Exception ex)
@@ -317,7 +449,7 @@ namespace TicketApp.Forms
 
         private void groupBoxHistory_Enter(object sender, EventArgs e)
         {
-
+            // Boş bırakıldı
         }
     }
 }

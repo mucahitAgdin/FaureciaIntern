@@ -1,48 +1,35 @@
-﻿//Models/Ticket.cs
-
+﻿// Models/Ticket.cs
 using System;
 
 namespace TicketApp.Models
 {
     /// <summary>
-    /// Ticket sınıfı, kullanıcıdan alınan destek taleplerini temsil eder.
+    /// Destek talebi bilgilerini tutan model sınıfı
     /// </summary>
     public class Ticket
     {
-        /// <summary>
-        /// Veritabanındaki otomatik artan kimlik numarası
-        /// </summary>
         public int Id { get; set; }
+        public string Area { get; set; }           // UAP-1, UAP-2, etc.
+        public string SubArea { get; set; }        // GAP-12, Üretim Bandı, etc.
+        public string Issue { get; set; }          // Sorun tipi
+        public string Description { get; set; }    // Detaylı açıklama
+        public string FirstName { get; set; }      // Kullanıcı adı
+        public string LastName { get; set; }       // Kullanıcı soyadı
+        public string PhoneNumber { get; set; }    // İletişim numarası
+        public DateTime CreatedAt { get; set; }    // Oluşturulma tarihi
+        public bool IsResolved { get; set; }       // Çözülmüş mü?
+        public string Status { get; set; }         // beklemede, işlemde, çözüldü, reddedildi
+        public string AssignedTo { get; set; }     // Atanan kişi
+        public string RejectionReason { get; set; } // Red sebebi (eğer varsa)
 
         /// <summary>
-        /// Hangi bölümden (UAP-1, FES vs.) talep geldiği
+        /// Tam kullanıcı adı
         /// </summary>
-        public string Area { get; set; }
+        public string FullName => $"{FirstName} {LastName}";
 
         /// <summary>
-        /// Hangi sorunla ilgili talep açıldığı (örneğin: "Mouse bozuldu")
+        /// Tam alan bilgisi
         /// </summary>
-        public string Issue { get; set; }
-
-        /// <summary>
-        /// Kullanıcının isteğe dair yazdığı açıklama (300 karaktere kadar)
-        /// </summary>
-        public string Description { get; set; }
-
-        /// <summary>
-        /// Talebin oluşturulma zamanı (kayıt tarihi)
-        /// </summary>
-        public DateTime CreatedAt { get; set; }
-
-        /// <summary>
-        /// Talep çözüldü mü? (false = çözülmedi, true = çözüldü)
-        /// </summary>
-        public bool IsResolved { get; set; } = false;
-
-        public string Status { get; set; } // "beklemede", "işlemde", "çözüldü"
-
-        public string AssignedTo { get; set; } 
-
-
+        public string FullArea => string.IsNullOrEmpty(SubArea) ? Area : $"{Area} - {SubArea}";
     }
 }
