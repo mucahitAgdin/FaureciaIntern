@@ -3,20 +3,48 @@
   "WorkspaceRootPath": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\forms\\settingsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\settingsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\forms\\settingsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\settingsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\helpers\\appconfigreader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:helpers\\appconfigreader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\forms\\settingsform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\settingsform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|c:\\users\\agdin\\desktop\\faurecia\\faureciaintern\\ticketapp\\forms\\settingsform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\settingsform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\forms\\settingsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\settingsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|c:\\users\\agdin\\desktop\\faurecia\\faureciaintern\\ticketapp\\helpers\\databasehelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:helpers\\databasehelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\forms\\mainform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\mainform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\forms\\adminform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\adminform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\forms\\adminform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\adminform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\forms\\adminform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\adminform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\helpers\\dailycleanupmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:helpers\\dailycleanupmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\forms\\mainform.resx||{81828910-B8B3-4D2B-99A3-067027C180C1}",
+      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\mainform.resx||{81828910-B8B3-4D2B-99A3-067027C180C1}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\helpers\\appconfigreader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:helpers\\appconfigreader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\forms\\loginform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -31,40 +59,12 @@
       "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\loginform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|c:\\users\\agdin\\desktop\\faurecia\\faureciaintern\\ticketapp\\forms\\mainform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\forms\\mainform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\mainform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\forms\\mainform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
       "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\mainform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\forms\\mainform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\mainform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\helpers\\databasehelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:helpers\\databasehelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\helpers\\dailycleanupmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:helpers\\dailycleanupmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|c:\\users\\agdin\\desktop\\faurecia\\faureciaintern\\ticketapp\\forms\\mainform.resx||{81828910-B8B3-4D2B-99A3-067027C180C1}",
-      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\mainform.resx||{81828910-B8B3-4D2B-99A3-067027C180C1}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\forms\\adminform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\adminform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\forms\\adminform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\adminform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\forms\\adminform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|solutionrelative:forms\\adminform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{7236290A-A923-4C66-AF02-7E26D593B503}|TicketApp.csproj|C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\models\\ticket.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -114,7 +114,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Bookmark",
@@ -134,20 +134,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 1,
               "Title": "SettingsForm.Designer.cs",
               "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\SettingsForm.Designer.cs",
               "RelativeDocumentMoniker": "Forms\\SettingsForm.Designer.cs",
               "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\SettingsForm.Designer.cs",
               "RelativeToolTip": "Forms\\SettingsForm.Designer.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAADkAAAAjAAAAAAAAAA==",
+              "ViewState": "AgIAADwAAAAAAAAAAAAqwFEAAABFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-17T05:45:05.238Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "SettingsForm.cs [Tasar\u0131m]",
               "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\SettingsForm.cs",
               "RelativeDocumentMoniker": "Forms\\SettingsForm.cs",
@@ -159,164 +159,33 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "MainForm.cs [Tasar\u0131m]",
-              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\MainForm.cs",
-              "RelativeDocumentMoniker": "Forms\\MainForm.cs",
-              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\MainForm.cs [Tasar\u0131m]",
-              "RelativeToolTip": "Forms\\MainForm.cs [Tasar\u0131m]",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-14T05:26:02.486Z",
-              "EditorCaption": " [Tasar\u0131m]"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "MainForm.cs",
-              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\MainForm.cs",
-              "RelativeDocumentMoniker": "Forms\\MainForm.cs",
-              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\MainForm.cs",
-              "RelativeToolTip": "Forms\\MainForm.cs",
-              "ViewState": "AgIAAKYBAAAAAAAAAAAAwMMBAAAMAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-14T05:27:41.654Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "LoginForm.cs [Tasar\u0131m]",
-              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\LoginForm.cs",
-              "RelativeDocumentMoniker": "Forms\\LoginForm.cs",
-              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\LoginForm.cs [Tasar\u0131m]",
-              "RelativeToolTip": "Forms\\LoginForm.cs [Tasar\u0131m]",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-14T06:13:14.327Z",
-              "EditorCaption": " [Tasar\u0131m]"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "LoginForm.cs",
-              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\LoginForm.cs",
-              "RelativeDocumentMoniker": "Forms\\LoginForm.cs",
-              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\LoginForm.cs",
-              "RelativeToolTip": "Forms\\LoginForm.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-14T06:13:26.383Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "LoginForm.Designer.cs",
-              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\LoginForm.Designer.cs",
-              "RelativeDocumentMoniker": "Forms\\LoginForm.Designer.cs",
-              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\LoginForm.Designer.cs",
-              "RelativeToolTip": "Forms\\LoginForm.Designer.cs",
-              "ViewState": "AgIAAAUAAAAAAAAAAAAqwBIAAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-14T06:13:31.218Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "SettingsForm.cs",
-              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\SettingsForm.cs",
-              "RelativeDocumentMoniker": "Forms\\SettingsForm.cs",
-              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\SettingsForm.cs",
-              "RelativeToolTip": "Forms\\SettingsForm.cs",
-              "ViewState": "AgIAAB0AAAAAAAAAAAAqwDQAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-13T13:29:15.082Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "AppConfigReader.cs",
-              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Helpers\\AppConfigReader.cs",
-              "RelativeDocumentMoniker": "Helpers\\AppConfigReader.cs",
-              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Helpers\\AppConfigReader.cs",
-              "RelativeToolTip": "Helpers\\AppConfigReader.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-14T06:30:54.764Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "MainForm.Designer.cs",
-              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\MainForm.Designer.cs",
-              "RelativeDocumentMoniker": "Forms\\MainForm.Designer.cs",
-              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\MainForm.Designer.cs",
-              "RelativeToolTip": "Forms\\MainForm.Designer.cs",
-              "ViewState": "AgIAAIoBAAAAAAAAAAAqwCYBAABNAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-14T05:31:20.504Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 3,
               "Title": "DatabaseHelper.cs",
               "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Helpers\\DatabaseHelper.cs",
               "RelativeDocumentMoniker": "Helpers\\DatabaseHelper.cs",
               "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Helpers\\DatabaseHelper.cs",
               "RelativeToolTip": "Helpers\\DatabaseHelper.cs",
-              "ViewState": "AgIAAFcAAAAAAAAAAAAxwLAAAAANAAAAAAAAAA==",
+              "ViewState": "AgIAAAoDAAAAAAAAAAAAAPcBAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-12T15:11:05.843Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "DailyCleanupManager.cs",
-              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Helpers\\DailyCleanupManager.cs",
-              "RelativeDocumentMoniker": "Helpers\\DailyCleanupManager.cs",
-              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Helpers\\DailyCleanupManager.cs",
-              "RelativeToolTip": "Helpers\\DailyCleanupManager.cs",
-              "ViewState": "AgIAACUAAAAAAAAAAAAAAB4AAAAnAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "SettingsForm.cs",
+              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\SettingsForm.cs",
+              "RelativeDocumentMoniker": "Forms\\SettingsForm.cs",
+              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\SettingsForm.cs",
+              "RelativeToolTip": "Forms\\SettingsForm.cs",
+              "ViewState": "AgIAANIBAAAAAAAAAAAAAPABAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-13T13:12:28.615Z",
+              "WhenOpened": "2025-07-13T13:29:15.082Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
-              "Title": "MainForm.resx",
-              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\MainForm.resx",
-              "RelativeDocumentMoniker": "Forms\\MainForm.resx",
-              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\MainForm.resx",
-              "RelativeToolTip": "Forms\\MainForm.resx",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001005|",
-              "WhenOpened": "2025-07-17T07:20:29.976Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 13,
-              "Title": "AdminForm.cs",
-              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\AdminForm.cs",
-              "RelativeDocumentMoniker": "Forms\\AdminForm.cs",
-              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\AdminForm.cs",
-              "RelativeToolTip": "Forms\\AdminForm.cs",
-              "ViewState": "AgIAAEwAAAAAAAAAAAAAABwAAAAsAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-13T13:29:01.963Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 6,
               "Title": "AdminForm.cs [Tasar\u0131m]",
               "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\AdminForm.cs",
               "RelativeDocumentMoniker": "Forms\\AdminForm.cs",
@@ -328,16 +197,139 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 5,
+              "Title": "AdminForm.cs",
+              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\AdminForm.cs",
+              "RelativeDocumentMoniker": "Forms\\AdminForm.cs",
+              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\AdminForm.cs",
+              "RelativeToolTip": "Forms\\AdminForm.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-13T13:29:01.963Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
               "Title": "AdminForm.Designer.cs",
               "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\AdminForm.Designer.cs",
               "RelativeDocumentMoniker": "Forms\\AdminForm.Designer.cs",
               "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\AdminForm.Designer.cs",
               "RelativeToolTip": "Forms\\AdminForm.Designer.cs",
-              "ViewState": "AgIAALcBAAAAAAAAAAAwwMgBAABFAAAAAAAAAA==",
+              "ViewState": "AgIAABsBAAAAAAAAAAAqwDUBAAA6AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-13T13:29:04.137Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "MainForm.Designer.cs",
+              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\MainForm.Designer.cs",
+              "RelativeDocumentMoniker": "Forms\\MainForm.Designer.cs",
+              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\MainForm.Designer.cs",
+              "RelativeToolTip": "Forms\\MainForm.Designer.cs",
+              "ViewState": "AgIAAHUBAAAAAAAAAAAAwKUBAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-14T05:31:20.504Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "DailyCleanupManager.cs",
+              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Helpers\\DailyCleanupManager.cs",
+              "RelativeDocumentMoniker": "Helpers\\DailyCleanupManager.cs",
+              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Helpers\\DailyCleanupManager.cs",
+              "RelativeToolTip": "Helpers\\DailyCleanupManager.cs",
+              "ViewState": "AgIAACUAAAAAAAAAAAAAAB4AAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-13T13:12:28.615Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "MainForm.resx",
+              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\MainForm.resx",
+              "RelativeDocumentMoniker": "Forms\\MainForm.resx",
+              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\MainForm.resx",
+              "RelativeToolTip": "Forms\\MainForm.resx",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001005|",
+              "WhenOpened": "2025-07-17T07:20:29.976Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "AppConfigReader.cs",
+              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Helpers\\AppConfigReader.cs",
+              "RelativeDocumentMoniker": "Helpers\\AppConfigReader.cs",
+              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Helpers\\AppConfigReader.cs",
+              "RelativeToolTip": "Helpers\\AppConfigReader.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-14T06:30:54.764Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "LoginForm.Designer.cs",
+              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\LoginForm.Designer.cs",
+              "RelativeDocumentMoniker": "Forms\\LoginForm.Designer.cs",
+              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\LoginForm.Designer.cs",
+              "RelativeToolTip": "Forms\\LoginForm.Designer.cs",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAqwBIAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-14T06:13:31.218Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "LoginForm.cs",
+              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\LoginForm.cs",
+              "RelativeDocumentMoniker": "Forms\\LoginForm.cs",
+              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\LoginForm.cs",
+              "RelativeToolTip": "Forms\\LoginForm.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-14T06:13:26.383Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "LoginForm.cs [Tasar\u0131m]",
+              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\LoginForm.cs",
+              "RelativeDocumentMoniker": "Forms\\LoginForm.cs",
+              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\LoginForm.cs [Tasar\u0131m]",
+              "RelativeToolTip": "Forms\\LoginForm.cs [Tasar\u0131m]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-14T06:13:14.327Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "MainForm.cs",
+              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\MainForm.cs",
+              "RelativeDocumentMoniker": "Forms\\MainForm.cs",
+              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\MainForm.cs",
+              "RelativeToolTip": "Forms\\MainForm.cs",
+              "ViewState": "AgIAAKYBAAAAAAAAAAAAwMMBAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-14T05:27:41.654Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "MainForm.cs [Tasar\u0131m]",
+              "DocumentMoniker": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\MainForm.cs",
+              "RelativeDocumentMoniker": "Forms\\MainForm.cs",
+              "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\MainForm.cs [Tasar\u0131m]",
+              "RelativeToolTip": "Forms\\MainForm.cs [Tasar\u0131m]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-14T05:26:02.486Z"
             },
             {
               "$type": "Document",
@@ -349,8 +341,7 @@
               "RelativeToolTip": "Helpers\\AreaCatalog.cs",
               "ViewState": "AgIAABoAAAAAAAAAAAAAAC4AAAAlAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-16T12:24:21.719Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-16T12:24:21.719Z"
             },
             {
               "$type": "Document",
@@ -362,8 +353,7 @@
               "RelativeToolTip": "Helpers\\Logger.cs",
               "ViewState": "AgIAAAkAAAAAAAAAAAAqwBgAAAAsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-12T15:11:15.514Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-12T15:11:15.514Z"
             },
             {
               "$type": "Document",
@@ -375,8 +365,7 @@
               "RelativeToolTip": "Helpers\\IssueCatalog.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAACEAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-13T13:12:00.6Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-13T13:12:00.6Z"
             },
             {
               "$type": "Document",
@@ -400,8 +389,7 @@
               "RelativeToolTip": "Models\\Ticket.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAABOAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-12T15:11:41.106Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-12T15:11:41.106Z"
             },
             {
               "$type": "Document",
@@ -424,8 +412,7 @@
               "ToolTip": "C:\\Users\\agdin\\Desktop\\Faurecia\\FaureciaIntern\\TicketApp\\Forms\\LoginForm.resx",
               "RelativeToolTip": "Forms\\LoginForm.resx",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001005|",
-              "WhenOpened": "2025-07-16T10:42:19.558Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-16T10:42:19.558Z"
             },
             {
               "$type": "Document",
