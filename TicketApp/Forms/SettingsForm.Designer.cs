@@ -1,4 +1,7 @@
-﻿namespace TicketApp.Forms
+﻿using System.Drawing;
+using System.Windows.Forms;
+
+namespace TicketApp.Forms
 {
     partial class SettingsForm
     {
@@ -29,19 +32,34 @@
         private void InitializeComponent()
         {
             this.SuspendLayout();
-            // 
-            // SettingsForm
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Name = "SettingsForm";
-            this.Text = "Form1";
-            this.Load += new System.EventHandler(this.SettingsForm_Load);
-            this.ResumeLayout(false);
 
+            // Form ayarları
+            this.Text = "Sistem Ayarları - Alan ve Sorun Yönetimi";
+            this.Size = new Size(800, 600);
+            this.MinimumSize = new Size(800, 600);
+            this.StartPosition = FormStartPosition.CenterParent;
+            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.BackColor = Color.White;
+
+            // TabControl oluştur
+            tabControl = new TabControl();
+            tabControl.Location = new Point(10, 10);
+            tabControl.Size = new Size(760, 500);
+            tabControl.Font = new Font("Segoe UI", 10F);
+
+            // Alan yönetimi tab'ı
+            CreateAreaManagementTab();
+
+            // Sorun yönetimi tab'ı
+            CreateIssueManagementTab();
+
+            // Genel butonlar
+            CreateGeneralButtons();
+
+            this.Controls.Add(tabControl);
+            this.ResumeLayout();
         }
-
         #endregion
     }
 }
