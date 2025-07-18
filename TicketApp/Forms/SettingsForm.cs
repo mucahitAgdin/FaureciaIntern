@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using TicketApp.Helpers;
 
 namespace TicketApp.Forms
 {
     public partial class SettingsForm : Form
     {
+<<<<<<< HEAD
         private Dictionary<string, List<string>> areaSubAreaMap;
         private Dictionary<string, List<string>> issueMap;
         private bool hasChanges = false;
@@ -46,14 +50,17 @@ namespace TicketApp.Forms
             InitializeComponent();
             LoadData();
             SetupEventHandlers();
+=======
+        public SettingsForm()
+        {
+            InitializeComponent();
+>>>>>>> parent of ce1ee67 (settings designs)
         }
 
         private void SettingsForm_Load(object sender, EventArgs e)
         {
-            // Form yüklendiğinde yapılacak işlemler
-            LoadData();
-        }
 
+<<<<<<< HEAD
         private void SetupEventHandlers()
         {
             // Alan yönetimi event handlers
@@ -489,6 +496,8 @@ namespace TicketApp.Forms
             }
 
             base.OnFormClosing(e);
+=======
+>>>>>>> parent of ce1ee67 (settings designs)
         }
 
         private void tabAreas_Click(object sender, EventArgs e)
