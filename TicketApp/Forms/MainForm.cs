@@ -298,9 +298,9 @@ namespace TicketApp.Forms
                     return;
                 }
 
-                if (description.Length > 300)
+                if (description.Length > 300 || description.Length < 20)
                 {
-                    MessageBox.Show("Açıklama 300 karakteri aşmamalı.", "Uzun Açıklama", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Açıklama 300 karakteri aşmamalı ve 20 karakterden kısa olamaz","hatalı açıklama" , MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     textBoxDescription.Focus();
                     return;
                 }

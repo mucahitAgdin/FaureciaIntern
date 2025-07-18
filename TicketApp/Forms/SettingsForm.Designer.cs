@@ -1,4 +1,7 @@
-﻿namespace TicketApp.Forms
+﻿using System.Drawing;
+using System.Windows.Forms;
+
+namespace TicketApp.Forms
 {
     partial class SettingsForm
     {
@@ -53,7 +56,6 @@
             this.tabIssues.SuspendLayout();
             this.SuspendLayout();
             // 
-<<<<<<< HEAD
             // tabControl
             // 
             this.tabControl.Controls.Add(this.tabAreas);
@@ -290,21 +292,10 @@
             this.tabAreas.PerformLayout();
             this.tabIssues.ResumeLayout(false);
             this.tabIssues.PerformLayout();
-=======
-            // SettingsForm
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Name = "SettingsForm";
-            this.Text = "Form1";
-            this.Load += new System.EventHandler(this.SettingsForm_Load);
->>>>>>> parent of ce1ee67 (settings designs)
             this.ResumeLayout(false);
 
         }
 
-<<<<<<< HEAD
         private void CreateAreaManagementTab()
         {
             // Tab page oluştur
@@ -567,8 +558,6 @@
             this.Controls.AddRange(new Control[] { this.btnSave, this.btnReset, this.btnCancel });
         }
 
-=======
->>>>>>> parent of ce1ee67 (settings designs)
         #endregion
     }
 }
