@@ -21,6 +21,8 @@ namespace TicketApp.Models
         public string Status { get; set; }         // beklemede, işlemde, çözüldü, reddedildi
         public string AssignedTo { get; set; }     // Atanan kişi
         public string RejectionReason { get; set; } // Red sebebi (eğer varsa)
+        public DateTime? UpdatedAt { get; set; }
+        public DateTime? ResolvedAt { get; set; }
 
         /// <summary>
         /// Tam kullanıcı adı

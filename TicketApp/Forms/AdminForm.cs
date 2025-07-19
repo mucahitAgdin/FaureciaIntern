@@ -21,6 +21,9 @@ namespace TicketApp.Forms
             InitializeComponent();
             _username = username;
             InitializeContextMenu();
+
+            //Event bağlantılarını ekle
+            this.Load += AdminForm_Load;
         }
 
         /// <summary>
