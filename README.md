@@ -1,2 +1,0 @@
-# FaureciaIntern
-Intern projects 

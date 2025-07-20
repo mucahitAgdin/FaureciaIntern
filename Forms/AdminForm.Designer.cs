@@ -33,6 +33,12 @@ namespace TicketApp.Forms
         private DataGridView dgvCozulen;
         private Label lblCozulenCount;
 
+        // Status bar kontrolleri
+        private StatusStrip statusStrip;
+        private ToolStripStatusLabel statusLabel;
+        private ToolStripStatusLabel lastUpdateLabel;
+        private ToolStripProgressBar progressBar;
+
         protected override void Dispose(bool disposing)
         {
             if (disposing && components != null)
@@ -42,6 +48,7 @@ namespace TicketApp.Forms
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AdminForm));
             this.lblWelcome = new System.Windows.Forms.Label();
             this.lblTotalCount = new System.Windows.Forms.Label();
             this.btnSettings = new System.Windows.Forms.Button();
@@ -51,33 +58,38 @@ namespace TicketApp.Forms
             this.lblSelectedTicket = new System.Windows.Forms.Label();
             this.gbBekleyen = new System.Windows.Forms.GroupBox();
             this.dgvBekleyen = new System.Windows.Forms.DataGridView();
-            this.lblBekleyenCount = new System.Windows.Forms.Label();
-            this.btnMarkInProgress = new System.Windows.Forms.Button();
-            this.gbIslemde = new System.Windows.Forms.GroupBox();
-            this.dgvIslemde = new System.Windows.Forms.DataGridView();
-            this.lblIslemdeCount = new System.Windows.Forms.Label();
-            this.btnMarkCompleted = new System.Windows.Forms.Button();
-            this.gbCozulen = new System.Windows.Forms.GroupBox();
-            this.dgvCozulen = new System.Windows.Forms.DataGridView();
-            this.lblCozulenCount = new System.Windows.Forms.Label();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.lblBekleyenCount = new System.Windows.Forms.Label();
+            this.btnMarkInProgress = new System.Windows.Forms.Button();
+            this.gbIslemde = new System.Windows.Forms.GroupBox();
+            this.dgvIslemde = new System.Windows.Forms.DataGridView();
             this.dataGridViewTextBoxColumn5 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn6 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn7 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn8 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.lblIslemdeCount = new System.Windows.Forms.Label();
+            this.btnMarkCompleted = new System.Windows.Forms.Button();
+            this.gbCozulen = new System.Windows.Forms.GroupBox();
+            this.dgvCozulen = new System.Windows.Forms.DataGridView();
             this.dataGridViewTextBoxColumn9 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn10 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn11 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn12 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.lblCozulenCount = new System.Windows.Forms.Label();
+            this.statusStrip = new System.Windows.Forms.StatusStrip();
+            this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.progressBar = new System.Windows.Forms.ToolStripProgressBar();
+            this.lastUpdateLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.gbBekleyen.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvBekleyen)).BeginInit();
             this.gbIslemde.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvIslemde)).BeginInit();
             this.gbCozulen.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvCozulen)).BeginInit();
+            this.statusStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // lblWelcome
@@ -113,7 +125,7 @@ namespace TicketApp.Forms
             this.btnSettings.Name = "btnSettings";
             this.btnSettings.Size = new System.Drawing.Size(100, 35);
             this.btnSettings.TabIndex = 2;
-            this.btnSettings.Text = "Ayarlar";
+            this.btnSettings.Text = "⚙️ Ayarlar";
             this.btnSettings.UseVisualStyleBackColor = false;
             this.btnSettings.Click += new System.EventHandler(this.btnSettings_Click);
             // 
@@ -128,7 +140,7 @@ namespace TicketApp.Forms
             this.btnLogout.Name = "btnLogout";
             this.btnLogout.Size = new System.Drawing.Size(100, 35);
             this.btnLogout.TabIndex = 3;
-            this.btnLogout.Text = "Çıkış Yap";
+            this.btnLogout.Text = "🚪 Çıkış Yap";
             this.btnLogout.UseVisualStyleBackColor = false;
             this.btnLogout.Click += new System.EventHandler(this.btnLogout_Click);
             // 
@@ -143,7 +155,7 @@ namespace TicketApp.Forms
             this.btnRefresh.Name = "btnRefresh";
             this.btnRefresh.Size = new System.Drawing.Size(100, 35);
             this.btnRefresh.TabIndex = 4;
-            this.btnRefresh.Text = "Yenile";
+            this.btnRefresh.Text = "🔄 Yenile";
             this.btnRefresh.UseVisualStyleBackColor = false;
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
@@ -151,13 +163,13 @@ namespace TicketApp.Forms
             // 
             this.txtDescription.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(249)))), ((int)(((byte)(250)))));
             this.txtDescription.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtDescription.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.txtDescription.Font = new System.Drawing.Font("Consolas", 9F);
             this.txtDescription.Location = new System.Drawing.Point(20, 470);
             this.txtDescription.Multiline = true;
             this.txtDescription.Name = "txtDescription";
             this.txtDescription.ReadOnly = true;
             this.txtDescription.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtDescription.Size = new System.Drawing.Size(1080, 80);
+            this.txtDescription.Size = new System.Drawing.Size(1218, 150);
             this.txtDescription.TabIndex = 9;
             this.txtDescription.Text = "Bir ticket seçin...";
             // 
@@ -181,7 +193,7 @@ namespace TicketApp.Forms
             this.gbBekleyen.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(193)))), ((int)(((byte)(7)))));
             this.gbBekleyen.Location = new System.Drawing.Point(20, 140);
             this.gbBekleyen.Name = "gbBekleyen";
-            this.gbBekleyen.Size = new System.Drawing.Size(350, 280);
+            this.gbBekleyen.Size = new System.Drawing.Size(400, 280);
             this.gbBekleyen.TabIndex = 5;
             this.gbBekleyen.TabStop = false;
             this.gbBekleyen.Text = "📋 BEKLEYEN TICKET\'LAR";
@@ -203,10 +215,38 @@ namespace TicketApp.Forms
             this.dgvBekleyen.Name = "dgvBekleyen";
             this.dgvBekleyen.ReadOnly = true;
             this.dgvBekleyen.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvBekleyen.Size = new System.Drawing.Size(330, 180);
+            this.dgvBekleyen.Size = new System.Drawing.Size(380, 180);
             this.dgvBekleyen.TabIndex = 0;
             this.dgvBekleyen.SelectionChanged += new System.EventHandler(this.GridView_SelectionChanged);
             this.dgvBekleyen.MouseClick += new System.Windows.Forms.MouseEventHandler(this.GridView_MouseClick);
+            // 
+            // dataGridViewTextBoxColumn1
+            // 
+            this.dataGridViewTextBoxColumn1.HeaderText = "ID";
+            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            this.dataGridViewTextBoxColumn1.ReadOnly = true;
+            this.dataGridViewTextBoxColumn1.Width = 40;
+            // 
+            // dataGridViewTextBoxColumn2
+            // 
+            this.dataGridViewTextBoxColumn2.HeaderText = "Alan";
+            this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
+            this.dataGridViewTextBoxColumn2.ReadOnly = true;
+            this.dataGridViewTextBoxColumn2.Width = 70;
+            // 
+            // dataGridViewTextBoxColumn3
+            // 
+            this.dataGridViewTextBoxColumn3.HeaderText = "Sorun";
+            this.dataGridViewTextBoxColumn3.Name = "dataGridViewTextBoxColumn3";
+            this.dataGridViewTextBoxColumn3.ReadOnly = true;
+            this.dataGridViewTextBoxColumn3.Width = 180;
+            // 
+            // dataGridViewTextBoxColumn4
+            // 
+            this.dataGridViewTextBoxColumn4.HeaderText = "Tarih";
+            this.dataGridViewTextBoxColumn4.Name = "dataGridViewTextBoxColumn4";
+            this.dataGridViewTextBoxColumn4.ReadOnly = true;
+            this.dataGridViewTextBoxColumn4.Width = 90;
             // 
             // lblBekleyenCount
             // 
@@ -241,9 +281,9 @@ namespace TicketApp.Forms
             this.gbIslemde.Controls.Add(this.btnMarkCompleted);
             this.gbIslemde.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.gbIslemde.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(123)))), ((int)(((byte)(255)))));
-            this.gbIslemde.Location = new System.Drawing.Point(385, 140);
+            this.gbIslemde.Location = new System.Drawing.Point(430, 140);
             this.gbIslemde.Name = "gbIslemde";
-            this.gbIslemde.Size = new System.Drawing.Size(350, 280);
+            this.gbIslemde.Size = new System.Drawing.Size(400, 280);
             this.gbIslemde.TabIndex = 6;
             this.gbIslemde.TabStop = false;
             this.gbIslemde.Text = "⚙️ İŞLEMDEKİ TICKET\'LAR";
@@ -265,10 +305,38 @@ namespace TicketApp.Forms
             this.dgvIslemde.Name = "dgvIslemde";
             this.dgvIslemde.ReadOnly = true;
             this.dgvIslemde.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvIslemde.Size = new System.Drawing.Size(330, 180);
+            this.dgvIslemde.Size = new System.Drawing.Size(380, 180);
             this.dgvIslemde.TabIndex = 0;
             this.dgvIslemde.SelectionChanged += new System.EventHandler(this.GridView_SelectionChanged);
             this.dgvIslemde.MouseClick += new System.Windows.Forms.MouseEventHandler(this.GridView_MouseClick);
+            // 
+            // dataGridViewTextBoxColumn5
+            // 
+            this.dataGridViewTextBoxColumn5.HeaderText = "ID";
+            this.dataGridViewTextBoxColumn5.Name = "dataGridViewTextBoxColumn5";
+            this.dataGridViewTextBoxColumn5.ReadOnly = true;
+            this.dataGridViewTextBoxColumn5.Width = 40;
+            // 
+            // dataGridViewTextBoxColumn6
+            // 
+            this.dataGridViewTextBoxColumn6.HeaderText = "Alan";
+            this.dataGridViewTextBoxColumn6.Name = "dataGridViewTextBoxColumn6";
+            this.dataGridViewTextBoxColumn6.ReadOnly = true;
+            this.dataGridViewTextBoxColumn6.Width = 70;
+            // 
+            // dataGridViewTextBoxColumn7
+            // 
+            this.dataGridViewTextBoxColumn7.HeaderText = "Sorun";
+            this.dataGridViewTextBoxColumn7.Name = "dataGridViewTextBoxColumn7";
+            this.dataGridViewTextBoxColumn7.ReadOnly = true;
+            this.dataGridViewTextBoxColumn7.Width = 180;
+            // 
+            // dataGridViewTextBoxColumn8
+            // 
+            this.dataGridViewTextBoxColumn8.HeaderText = "Tarih";
+            this.dataGridViewTextBoxColumn8.Name = "dataGridViewTextBoxColumn8";
+            this.dataGridViewTextBoxColumn8.ReadOnly = true;
+            this.dataGridViewTextBoxColumn8.Width = 90;
             // 
             // lblIslemdeCount
             // 
@@ -302,9 +370,9 @@ namespace TicketApp.Forms
             this.gbCozulen.Controls.Add(this.lblCozulenCount);
             this.gbCozulen.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.gbCozulen.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(167)))), ((int)(((byte)(69)))));
-            this.gbCozulen.Location = new System.Drawing.Point(750, 140);
+            this.gbCozulen.Location = new System.Drawing.Point(840, 140);
             this.gbCozulen.Name = "gbCozulen";
-            this.gbCozulen.Size = new System.Drawing.Size(350, 280);
+            this.gbCozulen.Size = new System.Drawing.Size(400, 280);
             this.gbCozulen.TabIndex = 7;
             this.gbCozulen.TabStop = false;
             this.gbCozulen.Text = "✅ ÇÖZÜLEN TICKET\'LAR";
@@ -326,11 +394,39 @@ namespace TicketApp.Forms
             this.dgvCozulen.Name = "dgvCozulen";
             this.dgvCozulen.ReadOnly = true;
             this.dgvCozulen.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvCozulen.Size = new System.Drawing.Size(330, 220);
+            this.dgvCozulen.Size = new System.Drawing.Size(380, 220);
             this.dgvCozulen.TabIndex = 0;
             this.dgvCozulen.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvCozulen_CellContentClick);
             this.dgvCozulen.SelectionChanged += new System.EventHandler(this.GridView_SelectionChanged);
             this.dgvCozulen.MouseClick += new System.Windows.Forms.MouseEventHandler(this.GridView_MouseClick);
+            // 
+            // dataGridViewTextBoxColumn9
+            // 
+            this.dataGridViewTextBoxColumn9.HeaderText = "ID";
+            this.dataGridViewTextBoxColumn9.Name = "dataGridViewTextBoxColumn9";
+            this.dataGridViewTextBoxColumn9.ReadOnly = true;
+            this.dataGridViewTextBoxColumn9.Width = 40;
+            // 
+            // dataGridViewTextBoxColumn10
+            // 
+            this.dataGridViewTextBoxColumn10.HeaderText = "Alan";
+            this.dataGridViewTextBoxColumn10.Name = "dataGridViewTextBoxColumn10";
+            this.dataGridViewTextBoxColumn10.ReadOnly = true;
+            this.dataGridViewTextBoxColumn10.Width = 70;
+            // 
+            // dataGridViewTextBoxColumn11
+            // 
+            this.dataGridViewTextBoxColumn11.HeaderText = "Sorun";
+            this.dataGridViewTextBoxColumn11.Name = "dataGridViewTextBoxColumn11";
+            this.dataGridViewTextBoxColumn11.ReadOnly = true;
+            this.dataGridViewTextBoxColumn11.Width = 180;
+            // 
+            // dataGridViewTextBoxColumn12
+            // 
+            this.dataGridViewTextBoxColumn12.HeaderText = "Tarih";
+            this.dataGridViewTextBoxColumn12.Name = "dataGridViewTextBoxColumn12";
+            this.dataGridViewTextBoxColumn12.ReadOnly = true;
+            this.dataGridViewTextBoxColumn12.Width = 90;
             // 
             // lblCozulenCount
             // 
@@ -343,77 +439,38 @@ namespace TicketApp.Forms
             this.lblCozulenCount.TabIndex = 1;
             this.lblCozulenCount.Text = "Çözülen: 0";
             // 
-            // dataGridViewTextBoxColumn1
+            // statusStrip
             // 
-            this.dataGridViewTextBoxColumn1.HeaderText = "ID";
-            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
-            this.dataGridViewTextBoxColumn1.ReadOnly = true;
+            this.statusStrip.BackColor = System.Drawing.Color.White;
+            this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.statusLabel,
+            this.progressBar,
+            this.lastUpdateLabel});
+            this.statusStrip.Location = new System.Drawing.Point(0, 627);
+            this.statusStrip.Name = "statusStrip";
+            this.statusStrip.Size = new System.Drawing.Size(1258, 22);
+            this.statusStrip.TabIndex = 10;
+            this.statusStrip.Text = "statusStrip1";
             // 
-            // dataGridViewTextBoxColumn2
+            // statusLabel
             // 
-            this.dataGridViewTextBoxColumn2.HeaderText = "Alan";
-            this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
-            this.dataGridViewTextBoxColumn2.ReadOnly = true;
+            this.statusLabel.Name = "statusLabel";
+            this.statusLabel.Size = new System.Drawing.Size(1140, 17);
+            this.statusLabel.Spring = true;
+            this.statusLabel.Text = "Hazır";
+            this.statusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // dataGridViewTextBoxColumn3
+            // progressBar
             // 
-            this.dataGridViewTextBoxColumn3.HeaderText = "Sorun";
-            this.dataGridViewTextBoxColumn3.Name = "dataGridViewTextBoxColumn3";
-            this.dataGridViewTextBoxColumn3.ReadOnly = true;
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(100, 16);
+            this.progressBar.Visible = false;
             // 
-            // dataGridViewTextBoxColumn4
+            // lastUpdateLabel
             // 
-            this.dataGridViewTextBoxColumn4.HeaderText = "Tarih";
-            this.dataGridViewTextBoxColumn4.Name = "dataGridViewTextBoxColumn4";
-            this.dataGridViewTextBoxColumn4.ReadOnly = true;
-            // 
-            // dataGridViewTextBoxColumn5
-            // 
-            this.dataGridViewTextBoxColumn5.HeaderText = "ID";
-            this.dataGridViewTextBoxColumn5.Name = "dataGridViewTextBoxColumn5";
-            this.dataGridViewTextBoxColumn5.ReadOnly = true;
-            // 
-            // dataGridViewTextBoxColumn6
-            // 
-            this.dataGridViewTextBoxColumn6.HeaderText = "Alan";
-            this.dataGridViewTextBoxColumn6.Name = "dataGridViewTextBoxColumn6";
-            this.dataGridViewTextBoxColumn6.ReadOnly = true;
-            // 
-            // dataGridViewTextBoxColumn7
-            // 
-            this.dataGridViewTextBoxColumn7.HeaderText = "Sorun";
-            this.dataGridViewTextBoxColumn7.Name = "dataGridViewTextBoxColumn7";
-            this.dataGridViewTextBoxColumn7.ReadOnly = true;
-            // 
-            // dataGridViewTextBoxColumn8
-            // 
-            this.dataGridViewTextBoxColumn8.HeaderText = "Tarih";
-            this.dataGridViewTextBoxColumn8.Name = "dataGridViewTextBoxColumn8";
-            this.dataGridViewTextBoxColumn8.ReadOnly = true;
-            // 
-            // dataGridViewTextBoxColumn9
-            // 
-            this.dataGridViewTextBoxColumn9.HeaderText = "ID";
-            this.dataGridViewTextBoxColumn9.Name = "dataGridViewTextBoxColumn9";
-            this.dataGridViewTextBoxColumn9.ReadOnly = true;
-            // 
-            // dataGridViewTextBoxColumn10
-            // 
-            this.dataGridViewTextBoxColumn10.HeaderText = "Alan";
-            this.dataGridViewTextBoxColumn10.Name = "dataGridViewTextBoxColumn10";
-            this.dataGridViewTextBoxColumn10.ReadOnly = true;
-            // 
-            // dataGridViewTextBoxColumn11
-            // 
-            this.dataGridViewTextBoxColumn11.HeaderText = "Sorun";
-            this.dataGridViewTextBoxColumn11.Name = "dataGridViewTextBoxColumn11";
-            this.dataGridViewTextBoxColumn11.ReadOnly = true;
-            // 
-            // dataGridViewTextBoxColumn12
-            // 
-            this.dataGridViewTextBoxColumn12.HeaderText = "Tarih";
-            this.dataGridViewTextBoxColumn12.Name = "dataGridViewTextBoxColumn12";
-            this.dataGridViewTextBoxColumn12.ReadOnly = true;
+            this.lastUpdateLabel.Name = "lastUpdateLabel";
+            this.lastUpdateLabel.Size = new System.Drawing.Size(103, 17);
+            this.lastUpdateLabel.Text = "Son güncelleme: -";
             // 
             // AdminForm
             // 
@@ -421,6 +478,7 @@ namespace TicketApp.Forms
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(245)))), ((int)(((byte)(245)))), ((int)(((byte)(245)))));
             this.ClientSize = new System.Drawing.Size(1258, 649);
+            this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.lblWelcome);
             this.Controls.Add(this.lblTotalCount);
             this.Controls.Add(this.btnSettings);
@@ -433,6 +491,7 @@ namespace TicketApp.Forms
             this.Controls.Add(this.txtDescription);
             this.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "AdminForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
@@ -447,11 +506,14 @@ namespace TicketApp.Forms
             this.gbCozulen.ResumeLayout(false);
             this.gbCozulen.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvCozulen)).EndInit();
+            this.statusStrip.ResumeLayout(false);
+            this.statusStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
 
+        // DataGridView kolonları
         private DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
