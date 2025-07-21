@@ -1,38 +1,60 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using TicketApp.Helpers;
-using TicketApp.Models;
-using System.Media;
 using System.Text;
+using TicketApp.Models;
+using TicketApp.Helpers;
+using TicketApp.Services;
 
 namespace TicketApp.Forms
 {
     public partial class AdminForm : Form
     {
+        #region Fields
+
         private List<Ticket> ticketList;
         private string _username;
         private ContextMenuStrip statusContextMenu;
-        private DataGridView currentGridView; // Hangi grid'de sağ tık yapıldığını takip etmek için
+        private DataGridView currentGridView;
         private List<string> supportTeam = new List<string> { "Burak Bey", "Kerem Bey", "Enver Bey", "Yavuz Bey" };
-        
-        // Gerçek zamanlı güncelleme için
-        private FileSystemWatcher dbWatcher;
-        private DateTime lastDbUpdate = DateTime.Now;
-        private System.Windows.Forms.Timer debounceTimer;
-        private NotifyIcon notifyIcon;
+
+        // Servisler
+        private RealtimeTicketService _realtimeService;
+        private NotificationManager _notificationManager;
+
+        #endregion
+
+        #region Constructor
 
         public AdminForm(string username)
         {
             InitializeComponent();
             _username = username;
             InitializeContextMenu();
+            InitializeServices();
+        }
 
-            //Event bağlantılarını ekle
-            this.Load += AdminForm_Load;
+        #endregion
+
+        #region Initialization Methods
+
+        /// <summary>
+        /// Servisleri başlatır
+        /// </summary>
+        private void InitializeServices()
+        {
+            // Bildirim yöneticisini oluştur
+            _notificationManager = new NotificationManager(this);
+
+            // Gerçek zamanlı servisi oluştur
+            _realtimeService = new RealtimeTicketService();
+
+            // Event'lere abone ol
+            _realtimeService.NewTicketReceived += OnNewTicketReceived;
+            _realtimeService.TicketUpdated += OnTicketUpdated;
+            _realtimeService.DatabaseChanged += OnDatabaseChanged;
         }
 
         /// <summary>
@@ -63,7 +85,7 @@ namespace TicketApp.Forms
             cozulduItem.BackColor = Color.LightGreen;
             cozulduItem.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
 
-            // "Beklemede" menüsü (isteğe bağlı)
+            // "Beklemede" menüsü
             var beklemedeyeAlItem = new ToolStripMenuItem("Beklemede");
             beklemedeyeAlItem.Click += (s, e) => ChangeTicketStatus("beklemede");
             beklemedeyeAlItem.BackColor = Color.LightYellow;
@@ -81,6 +103,110 @@ namespace TicketApp.Forms
             statusContextMenu.BackColor = Color.White;
             statusContextMenu.ForeColor = Color.Black;
         }
+
+        #endregion
+
+        #region Form Events
+
+        /// <summary>
+        /// Form yüklendiğinde çalışır
+        /// </summary>
+        private void AdminForm_Load(object sender, EventArgs e)
+        {
+            lblWelcome.Text = $"Hoş geldiniz, {_username}";
+            LoadTickets();
+
+            // Servisi başlat
+            try
+            {
+                _realtimeService.Start();
+                UpdateStatusBar("Gerçek zamanlı takip aktif ✓");
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                UpdateStatusBar("Gerçek zamanlı takip başlatılamadı ✗");
+            }
+
+            // Tooltip'ler ekle
+            var toolTip = new ToolTip();
+            toolTip.SetToolTip(btnRefresh, "Ticket listesini yenile");
+            toolTip.SetToolTip(btnSettings, "Uygulama ayarları");
+            toolTip.SetToolTip(btnLogout, "Çıkış yap");
+        }
+
+        /// <summary>
+        /// Form kapanırken
+        /// </summary>
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            // Servisleri temizle
+            _realtimeService?.Dispose();
+            _notificationManager?.Dispose();
+
+            base.OnFormClosing(e);
+        }
+
+        #endregion
+
+        #region Realtime Service Events
+
+        /// <summary>
+        /// Yeni ticket geldiğinde
+        /// </summary>
+        private void OnNewTicketReceived(object sender, TicketEventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new EventHandler<TicketEventArgs>(OnNewTicketReceived), sender, e);
+                return;
+            }
+
+            // Bildirimi göster
+            _notificationManager.ShowNewTicketNotification(e.Ticket);
+
+            // Listeyi yenile
+            LoadTickets();
+
+            // Log
+            Logger.Log($"Yeni ticket: #{e.Ticket.Id} - {e.Ticket.Issue}");
+        }
+
+        /// <summary>
+        /// Ticket güncellendiğinde
+        /// </summary>
+        private void OnTicketUpdated(object sender, TicketEventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new EventHandler<TicketEventArgs>(OnTicketUpdated), sender, e);
+                return;
+            }
+
+            // Bildirimi göster
+            _notificationManager.ShowTicketUpdateNotification(e.Ticket, "güncellendi");
+
+            // Listeyi yenile
+            LoadTickets();
+        }
+
+        /// <summary>
+        /// Veritabanı değiştiğinde
+        /// </summary>
+        private void OnDatabaseChanged(object sender, EventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new EventHandler(OnDatabaseChanged), sender, e);
+                return;
+            }
+
+            UpdateStatusBar($"Son güncelleme: {DateTime.Now:HH:mm:ss}");
+        }
+
+        #endregion
+
+        #region Ticket Operations
 
         /// <summary>
         /// Ticket'ı belirli bir kişiye atar ve durumunu işlemde olarak değiştirir
@@ -182,6 +308,12 @@ namespace TicketApp.Forms
                         ticket.AssignedTo = null;
                     }
 
+                    // Çözüldü yapılıyorsa IsResolved'ı güncelle
+                    if (newStatus == "çözüldü")
+                    {
+                        ticket.IsResolved = true;
+                    }
+
                     bool updateSuccess = DatabaseHelper.UpdateTicketStatus(ticket);
 
                     if (updateSuccess)
@@ -229,30 +361,19 @@ namespace TicketApp.Forms
         }
 
         /// <summary>
-        /// Form yüklendiğinde çalışır
-        /// </summary>
-        private void AdminForm_Load(object sender, EventArgs e)
-        {
-            lblWelcome.Text = $"Hoş geldiniz, {_username}";
-            LoadTickets();
-
-            // YENİ SATIR
-            InitializeDatabaseWatcher();
-
-            // Tooltip'ler ekle
-            var toolTip = new ToolTip();
-            toolTip.SetToolTip(btnRefresh, "Ticket listesini yenile");
-            toolTip.SetToolTip(btnSettings, "Uygulama ayarları");
-            toolTip.SetToolTip(btnLogout, "Çıkış yap");
-        }
-
-        /// <summary>
         /// Ticket'ları kategorilere ayırarak yükler
         /// </summary>
         private void LoadTickets()
         {
             try
             {
+                // Progress bar'ı göster
+                if (progressBar != null)
+                {
+                    progressBar.Visible = true;
+                    statusLabel.Text = "Ticketlar yükleniyor...";
+                }
+
                 ticketList = DatabaseHelper.GetAllTickets();
 
                 // Kategorilere ayır
@@ -312,9 +433,20 @@ namespace TicketApp.Forms
 
                 // Grid renklerini ayarla
                 UpdateGridColors();
+
+                // Progress bar'ı gizle
+                if (progressBar != null)
+                {
+                    progressBar.Visible = false;
+                    statusLabel.Text = $"Toplam {ticketList.Count} ticket yüklendi";
+                    lastUpdateLabel.Text = $"Son güncelleme: {DateTime.Now:HH:mm:ss}";
+                }
             }
             catch (Exception ex)
             {
+                if (progressBar != null)
+                    progressBar.Visible = false;
+
                 Logger.Log(ex);
                 MessageBox.Show($"Ticket'lar yüklenirken hata oluştu:\n{ex.Message}",
                               "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -345,6 +477,10 @@ namespace TicketApp.Forms
             }
         }
 
+        #endregion
+
+        #region Grid Events
+
         /// <summary>
         /// Grid seçimi değiştiğinde açıklama kutusunu günceller
         /// </summary>
@@ -360,7 +496,7 @@ namespace TicketApp.Forms
 
                     if (ticket != null)
                     {
-                        // ESKİ KOD YERİNE:
+                        // Açıklama metnini güncelle
                         txtDescription.Text = BuildTicketDetails(ticket);
                         UpdateSelectedTicketLabel(ticket);
                     }
@@ -401,6 +537,10 @@ namespace TicketApp.Forms
             }
         }
 
+        #endregion
+
+        #region Button Events
+
         /// <summary>
         /// Ayarlar butonu
         /// </summary>
@@ -432,259 +572,6 @@ namespace TicketApp.Forms
         }
 
         /// <summary>
-        /// Veritabanı değişikliklerini takip eden FileSystemWatcher'ı başlatır
-        /// </summary>
-        private void InitializeDatabaseWatcher()
-        {
-            try
-            {
-                // Veritabanı yolunu al
-                string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tickets.db");
-                string dbDirectory = Path.GetDirectoryName(dbPath);
-                string dbFileName = Path.GetFileName(dbPath);
-
-                // FileSystemWatcher oluştur
-                dbWatcher = new FileSystemWatcher(dbDirectory);
-                dbWatcher.Filter = dbFileName;
-
-                // Neleri izleyeceğini belirt
-                dbWatcher.NotifyFilter = NotifyFilters.LastWrite
-                                       | NotifyFilters.Size
-                                       | NotifyFilters.LastAccess;
-
-                // Event handler'ları bağla
-                dbWatcher.Changed += OnDatabaseChanged;
-                dbWatcher.Created += OnDatabaseChanged;
-
-                // İzlemeyi başlat
-                dbWatcher.EnableRaisingEvents = true;
-
-                Logger.Log("Veritabanı izleyici başlatıldı.");
-
-                // Debounce timer'ı oluştur (çoklu tetiklemeyi önlemek için)
-                debounceTimer = new System.Windows.Forms.Timer();
-                debounceTimer.Interval = 500; // 500ms bekle
-                debounceTimer.Tick += DebounceTimer_Tick;
-            }
-            catch (Exception ex)
-            {
-                Logger.Log($"FileSystemWatcher başlatma hatası: {ex.Message}");
-                MessageBox.Show(
-                    "Otomatik güncelleme sistemi başlatılamadı.\n" +
-                    "Manuel yenileme yapmanız gerekebilir.",
-                    "Uyarı",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning
-                );
-            }
-        }
-
-        /// <summary>
-        /// Veritabanı dosyası değiştiğinde tetiklenir
-        /// </summary>
-        private void OnDatabaseChanged(object sender, FileSystemEventArgs e)
-        {
-            // Kendi yazdığımız değişiklikleri yoksay
-            if (DateTime.Now.Subtract(lastDbUpdate).TotalMilliseconds < 1000)
-                return;
-
-            // Timer zaten çalışıyorsa durdur ve yeniden başlat (debouncing)
-            debounceTimer.Stop();
-            debounceTimer.Start();
-        }
-
-        /// <summary>
-        /// Debounce timer tetiklendiğinde (gerçek güncelleme burada)
-        /// </summary>
-        private void DebounceTimer_Tick(object sender, EventArgs e)
-        {
-            debounceTimer.Stop();
-
-            // Ana thread'de çalıştır (UI güncellemesi için gerekli)
-            if (this.InvokeRequired)
-            {
-                this.BeginInvoke(new Action(() => RefreshTicketsWithNotification()));
-            }
-            else
-            {
-                RefreshTicketsWithNotification();
-            }
-        }
-
-        /// <summary>
-        /// Ticketları yeniler ve yeni ticket varsa bildirim gösterir
-        /// </summary>
-        private void RefreshTicketsWithNotification()
-        {
-            try
-            {
-                // Mevcut ticket sayısını kaydet
-                int oldBekleyenCount = ticketList?.Where(t => t.Status == "beklemede").Count() ?? 0;
-
-                // Ticketları yenile
-                LoadTickets();
-
-                // Yeni bekleyen ticket var mı kontrol et
-                int newBekleyenCount = ticketList.Where(t => t.Status == "beklemede").Count();
-
-                if (newBekleyenCount > oldBekleyenCount)
-                {
-                    int newTicketCount = newBekleyenCount - oldBekleyenCount;
-
-                    // Bildirim göster
-                    ShowNewTicketNotification(newTicketCount);
-
-                    // Ses çal
-                    PlayNotificationSound();
-
-                    // Form başlığını güncelle (yanıp sönme efekti)
-                    FlashWindowTitle(newTicketCount);
-                }
-
-                // Son güncelleme zamanını kaydet
-                lastDbUpdate = DateTime.Now;
-
-                // Durum çubuğunu güncelle (varsa)
-                UpdateStatusBar($"Otomatik güncelleme: {DateTime.Now:HH:mm:ss}");
-            }
-            catch (Exception ex)
-            {
-                Logger.Log($"Otomatik yenileme hatası: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Windows bildirim balonu gösterir
-        /// </summary>
-        private void ShowNewTicketNotification(int count)
-        {
-            try
-            {
-                // NotifyIcon yoksa oluştur
-                if (notifyIcon == null)
-                {
-                    notifyIcon = new NotifyIcon();
-                    notifyIcon.Icon = this.Icon ?? SystemIcons.Information;
-                    notifyIcon.Text = "IT Destek Sistemi";
-                    notifyIcon.BalloonTipClicked += (s, e) =>
-                    {
-                        // Bildirme tıklandığında formu öne getir
-                        this.WindowState = FormWindowState.Normal;
-                        this.BringToFront();
-                        this.Activate();
-                    };
-                }
-
-                notifyIcon.Visible = true;
-
-                // En son gelen ticket bilgisini al
-                var latestTicket = ticketList
-                    .Where(t => t.Status == "beklemede")
-                    .OrderByDescending(t => t.CreatedAt)
-                    .FirstOrDefault();
-
-                string title = count == 1 ? "Yeni Ticket!" : $"{count} Yeni Ticket!";
-                string text = latestTicket != null ?
-                    $"{latestTicket.FullName} - {latestTicket.Issue}\n{latestTicket.Area}/{latestTicket.SubArea}" :
-                    "Yeni destek talebi geldi.";
-
-                notifyIcon.BalloonTipTitle = title;
-                notifyIcon.BalloonTipText = text;
-                notifyIcon.BalloonTipIcon = ToolTipIcon.Info;
-                notifyIcon.ShowBalloonTip(5000); // 5 saniye göster
-
-                // 10 saniye sonra gizle
-                var hideTimer = new System.Windows.Forms.Timer();
-                hideTimer.Interval = 10000;
-                hideTimer.Tick += (s, e) =>
-                {
-                    notifyIcon.Visible = false;
-                    hideTimer.Stop();
-                    hideTimer.Dispose();
-                };
-                hideTimer.Start();
-            }
-            catch (Exception ex)
-            {
-                Logger.Log($"Bildirim gösterme hatası: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Bildirim sesi çalar
-        /// </summary>
-        private void PlayNotificationSound()
-        {
-            try
-            {
-                // Windows varsayılan bildirim sesi
-                System.Media.SystemSounds.Asterisk.Play();
-
-                // Veya özel ses dosyası (isteğe bağlı)
-                // string soundPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "notification.wav");
-                // if (File.Exists(soundPath))
-                // {
-                //     using (var player = new System.Media.SoundPlayer(soundPath))
-                //     {
-                //         player.Play();
-                //     }
-                // }
-            }
-            catch (Exception ex)
-            {
-                Logger.Log($"Ses çalma hatası: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Form başlığında yanıp sönme efekti
-        /// </summary>
-        private void FlashWindowTitle(int newTicketCount)
-        {
-            string originalTitle = this.Text;
-            int flashCount = 0;
-
-            var flashTimer = new System.Windows.Forms.Timer();
-            flashTimer.Interval = 500;
-            flashTimer.Tick += (s, e) =>
-            {
-                if (flashCount >= 6) // 3 kez yanıp sönsün
-                {
-                    this.Text = originalTitle;
-                    flashTimer.Stop();
-                    flashTimer.Dispose();
-                    return;
-                }
-
-                if (flashCount % 2 == 0)
-                {
-                    this.Text = $"*** {newTicketCount} YENİ TICKET! ***";
-                }
-                else
-                {
-                    this.Text = originalTitle;
-                }
-
-                flashCount++;
-            };
-            flashTimer.Start();
-        }
-
-        /// <summary>
-        /// Durum çubuğunu günceller
-        /// </summary>
-        private void UpdateStatusBar(string message)
-        {
-            // Eğer StatusStrip kullanıyorsanız
-            if (statusLabel != null)
-            {
-                statusLabel.Text = message;
-            }
-        }
-
-
-
-        /// <summary>
         /// Yenile butonu
         /// </summary>
         private void btnRefresh_Click(object sender, EventArgs e)
@@ -692,98 +579,6 @@ namespace TicketApp.Forms
             LoadTickets();
             MessageBox.Show("Ticket listesi yenilendi.", "Bilgi", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
-
-        #region Ticket Detail Methods
-
-        /// <summary>
-        /// Ticket detaylarını formatlar
-        /// </summary>
-        private string BuildTicketDetails(Ticket ticket)
-        {
-            var sb = new StringBuilder();
-
-            // Kişi bilgileri
-            sb.AppendLine("👤 GÖNDERİCİ BİLGİLERİ");
-            sb.AppendLine($"Ad Soyad: {ticket.FirstName} {ticket.LastName}");
-            sb.AppendLine($"Telefon: {ticket.PhoneNumber}");
-            sb.AppendLine();
-
-            // Konum bilgileri
-            sb.AppendLine("📍 KONUM BİLGİLERİ");
-            sb.AppendLine($"Ana Alan: {ticket.Area}");
-            sb.AppendLine($"Alt Alan: {ticket.SubArea}");
-            sb.AppendLine();
-
-            // Sorun detayları
-            sb.AppendLine("⚠️ SORUN DETAYLARI");
-            sb.AppendLine($"Sorun Tipi: {ticket.Issue}");
-            sb.AppendLine($"Oluşturma Tarihi: {ticket.CreatedAt:dd.MM.yyyy HH:mm}");
-            sb.AppendLine();
-
-            // Durum bilgileri
-            sb.AppendLine("📊 DURUM BİLGİLERİ");
-            sb.AppendLine($"Mevcut Durum: {GetStatusText(ticket.Status)}");
-
-            if (!string.IsNullOrEmpty(ticket.AssignedTo))
-            {
-                sb.AppendLine($"Atanan Kişi: {ticket.AssignedTo}");
-            }
-
-            sb.AppendLine();
-            sb.AppendLine("📝 AÇIKLAMA");
-            sb.AppendLine(new string('-', 40));
-            sb.AppendLine(ticket.Description);
-
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// Seçilen ticket etiketini günceller
-        /// </summary>
-        private void UpdateSelectedTicketLabel(Ticket ticket)
-        {
-            string statusIcon = GetStatusIcon(ticket.Status);
-            string assignedInfo = string.IsNullOrEmpty(ticket.AssignedTo) ?
-                "Atanmamış" : ticket.AssignedTo;
-
-            // lblSelectedTicket'ın var olduğunu kontrol et
-            if (lblSelectedTicket != null)
-            {
-                lblSelectedTicket.Text = $"{statusIcon} Ticket #{ticket.Id} - {ticket.FirstName} {ticket.LastName} - {ticket.Area}/{ticket.SubArea}";
-            }
-        }
-
-        /// <summary>
-        /// Status metnini döndürür
-        /// </summary>
-        private string GetStatusText(string status)
-        {
-            switch (status?.ToLower())
-            {
-                case "beklemede": return "⏳ Beklemede";
-                case "işlemde": return "⚙️ İşlemde";
-                case "çözüldü": return "✅ Çözüldü";
-                case "reddedildi": return "❌ Reddedildi";
-                default: return "❓ Bilinmiyor";
-            }
-        }
-
-        /// <summary>
-        /// Status ikonunu döndürür
-        /// </summary>
-        private string GetStatusIcon(string status)
-        {
-            switch (status?.ToLower())
-            {
-                case "beklemede": return "⏳";
-                case "işlemde": return "⚙️";
-                case "çözüldü": return "✅";
-                case "reddedildi": return "❌";
-                default: return "❓";
-            }
-        }
-
-        #endregion
 
         /// <summary>
         /// Hızlı işlem butonları
@@ -845,6 +640,116 @@ namespace TicketApp.Forms
         {
             // Çözülen ticket'lar için özel işlemler buraya eklenebilir
         }
-    }
 
+        #endregion
+
+        #region Helper Methods
+
+        /// <summary>
+        /// Ticket detaylarını formatlar
+        /// </summary>
+        private string BuildTicketDetails(Ticket ticket)
+        {
+            var sb = new StringBuilder();
+
+            // Kişi bilgileri
+            sb.AppendLine("👤 GÖNDERİCİ BİLGİLERİ");
+            sb.AppendLine($"Ad Soyad: {ticket.FirstName} {ticket.LastName}");
+            sb.AppendLine($"Telefon: {ticket.PhoneNumber}");
+            sb.AppendLine();
+
+            // Konum bilgileri
+            sb.AppendLine("📍 KONUM BİLGİLERİ");
+            sb.AppendLine($"Ana Alan: {ticket.Area}");
+            sb.AppendLine($"Alt Alan: {ticket.SubArea}");
+            sb.AppendLine();
+
+            // Sorun detayları
+            sb.AppendLine("⚠️ SORUN DETAYLARI");
+            sb.AppendLine($"Sorun Tipi: {ticket.Issue}");
+            sb.AppendLine($"Oluşturma Tarihi: {ticket.CreatedAt:dd.MM.yyyy HH:mm}");
+            sb.AppendLine();
+
+            // Durum bilgileri
+            sb.AppendLine("📊 DURUM BİLGİLERİ");
+            sb.AppendLine($"Mevcut Durum: {GetStatusText(ticket.Status)}");
+
+            if (!string.IsNullOrEmpty(ticket.AssignedTo))
+            {
+                sb.AppendLine($"Atanan Kişi: {ticket.AssignedTo}");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("📝 AÇIKLAMA");
+            sb.AppendLine(new string('-', 40));
+            sb.AppendLine(ticket.Description);
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Seçilen ticket etiketini günceller
+        /// </summary>
+        private void UpdateSelectedTicketLabel(Ticket ticket)
+        {
+            string statusIcon = GetStatusIcon(ticket.Status);
+            string assignedInfo = string.IsNullOrEmpty(ticket.AssignedTo) ?
+                "Atanmamış" : ticket.AssignedTo;
+
+            if (lblSelectedTicket != null)
+            {
+                lblSelectedTicket.Text = $"{statusIcon} Ticket #{ticket.Id} - {ticket.FirstName} {ticket.LastName} - {ticket.Area}/{ticket.SubArea}";
+            }
+        }
+
+        /// <summary>
+        /// Status metnini döndürür
+        /// </summary>
+        private string GetStatusText(string status)
+        {
+            switch (status?.ToLower())
+            {
+                case "beklemede": return "⏳ Beklemede";
+                case "işlemde": return "⚙️ İşlemde";
+                case "çözüldü": return "✅ Çözüldü";
+                case "reddedildi": return "❌ Reddedildi";
+                default: return "❓ Bilinmiyor";
+            }
+        }
+
+        /// <summary>
+        /// Status ikonunu döndürür
+        /// </summary>
+        private string GetStatusIcon(string status)
+        {
+            switch (status?.ToLower())
+            {
+                case "beklemede": return "⏳";
+                case "işlemde": return "⚙️";
+                case "çözüldü": return "✅";
+                case "reddedildi": return "❌";
+                default: return "❓";
+            }
+        }
+
+        /// <summary>
+        /// Durum çubuğunu günceller
+        /// </summary>
+        private void UpdateStatusBar(string message)
+        {
+            if (statusLabel != null)
+            {
+                statusLabel.Text = message;
+            }
+
+            if (lastUpdateLabel != null)
+            {
+                lastUpdateLabel.Text = $"Son güncelleme: {DateTime.Now:HH:mm:ss}";
+            }
+
+            Logger.Log($"Status: {message}");
+        }
+
+        #endregion
+    }
 }

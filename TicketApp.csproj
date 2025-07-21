@@ -257,6 +257,8 @@
     <Compile Include="Models\Ticket.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\NotificationManager.cs" />
+    <Compile Include="Services\RealtimeTicketService.cs" />
     <Compile Include="Services\TicketService.cs" />
     <EmbeddedResource Include="Forms\AdminForm.resx">
       <DependentUpon>AdminForm.cs</DependentUpon>
