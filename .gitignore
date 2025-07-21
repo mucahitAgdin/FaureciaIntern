@@ -24,4 +24,7 @@ hs_err_pid*
 replay_pid*
 
 
+# VS cache
 .vs/
+*.user
+*.suo
