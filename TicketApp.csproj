@@ -253,7 +253,9 @@
     <Compile Include="Helpers\DatabaseHelper.cs" />
     <Compile Include="Helpers\IssueCatalog.cs" />
     <Compile Include="Helpers\Logger.cs" />
+    <Compile Include="Helpers\NetworkDatabaseHelper.cs" />
     <Compile Include="Helpers\SecurityHelper.cs" />
+    <Compile Include="Helpers\SharedDatabaseHelper.cs" />
     <Compile Include="Models\Ticket.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

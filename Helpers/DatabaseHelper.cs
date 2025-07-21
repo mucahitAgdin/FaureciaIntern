@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Security;
 using TicketApp.Models;
+using System.Configuration;
 
 namespace TicketApp.Helpers
 {
@@ -17,18 +18,28 @@ namespace TicketApp.Helpers
     {
         #region Fields & Properties
 
-        // Veritabanı dosyasının fiziksel yolu
-        private static readonly string dbPath = Path.Combine(
-            AppDomain.CurrentDomain.BaseDirectory, "tickets.db");
 
-        // SQLite bağlantı dizesi
-        private static readonly string connectionString = $"Data Source={dbPath};Version=3;";
 
         // Tablo isimleri (typo önlemek için sabit)
         private const string TICKETS_TABLE = "Tickets";
         private const string AREAS_TABLE = "Areas";
         private const string SUBAREAS_TABLE = "SubAreas";
         private const string ISSUES_TABLE = "Issues";
+
+        // Ortak klasör yolu - TÜM BİLGİSAYARLARDA AYNI OLMALI
+        private static readonly string SHARED_FOLDER =
+        ConfigurationManager.AppSettings["SharedFolderPath"].TrimEnd('\\');
+        
+        private static readonly string DB_FILENAME = ConfigurationManager.AppSettings["DatabaseFileName"];
+
+        // Veritabanı yolu
+        private static readonly string dbPath = @"C:\TicketAppShared\tickets.db";
+
+
+        // Connection string - Multi-user için özel ayarlar
+        private static readonly string connectionString =
+    $"Data Source={dbPath};Version=3;Journal Mode=WAL;Cache Size=10000;Temp Store=Memory;Synchronous=NORMAL;Busy Timeout=10000;Default Timeout=30;";
+
 
         #endregion
 
@@ -41,37 +52,65 @@ namespace TicketApp.Helpers
         {
             try
             {
-                // Veritabanı dosyası yoksa oluştur
-                if (!File.Exists(dbPath))
+                string folder = Path.GetDirectoryName(dbPath);
+
+                if (string.IsNullOrWhiteSpace(folder))
+                    throw new Exception($"Veritabanı yolu geçersiz: {dbPath}");
+
+                // 📁 Klasör yoksa oluştur
+                if (!Directory.Exists(folder))
                 {
-                    SQLiteConnection.CreateFile(dbPath);
-                    Logger.Log("Veritabanı dosyası oluşturuldu.");
+                    Directory.CreateDirectory(folder);
+                    Logger.Log($"Veritabanı klasörü oluşturuldu: {folder}");
                 }
 
+                // 🔐 Erişim testi
+                if (!File.Exists(dbPath))
+                {
+                    try
+                    {
+                        SQLiteConnection.CreateFile(dbPath);
+                        Logger.Log("Veritabanı dosyası oluşturuldu.");
+                    }
+                    catch (Exception fileEx)
+                    {
+                        throw new IOException($"Veritabanı dosyası oluşturulamadı: {dbPath}", fileEx);
+                    }
+                }
+
+                // 🧪 Dosya gerçekten erişilebilir mi? (ön test)
+                try
+                {
+                    using (var fs = File.Open(dbPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                    {
+                        Logger.Log("Veritabanı dosyasına erişim başarılı.");
+                    }
+                }
+                catch (Exception fsEx)
+                {
+                    throw new IOException($"Veritabanı dosyasına erişilemiyor: {dbPath}", fsEx);
+                }
+
+                // 🚀 Veritabanı bağlantısını başlat
                 using (var conn = new SQLiteConnection(connectionString))
                 {
                     conn.Open();
 
-                    // Transaction kullanarak atomik işlem garantisi
                     using (var transaction = conn.BeginTransaction())
                     {
                         try
                         {
-                            // Tabloları oluştur
                             CreateTables(conn);
-
-                            // Mevcut tablolara eksik kolonları ekle
                             UpdateExistingTables(conn);
-
-                            // Varsayılan verileri yükle (eğer boşsa)
                             LoadDefaultDataIfEmpty(conn);
 
                             transaction.Commit();
                             Logger.Log("Veritabanı başarıyla başlatıldı.");
                         }
-                        catch
+                        catch (Exception innerEx)
                         {
                             transaction.Rollback();
+                            Logger.Log($"Transaction geri alındı: {innerEx.Message}");
                             throw;
                         }
                     }

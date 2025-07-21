@@ -136,13 +136,6 @@ namespace TicketApp.Forms
             this.btnITPanel.Click += new System.EventHandler(this.btnITPanel_Click);
             this.btnITPanel.Cursor = System.Windows.Forms.Cursors.Hand;
 
-            // IT Paneli hover efekti
-            this.btnITPanel.MouseEnter += (s, e) => {
-                this.btnITPanel.BackColor = System.Drawing.Color.FromArgb(44, 62, 80);
-            };
-            this.btnITPanel.MouseLeave += (s, e) => {
-                this.btnITPanel.BackColor = System.Drawing.Color.FromArgb(52, 73, 94);
-            };
 
             // Kullanıcı Paneli butonu
             this.btnUserPanel = new System.Windows.Forms.Button();
@@ -158,14 +151,6 @@ namespace TicketApp.Forms
             this.btnUserPanel.UseVisualStyleBackColor = false;
             this.btnUserPanel.Click += new System.EventHandler(this.btnUserPanel_Click);
             this.btnUserPanel.Cursor = System.Windows.Forms.Cursors.Hand;
-
-            // Kullanıcı Paneli hover efekti
-            this.btnUserPanel.MouseEnter += (s, e) => {
-                this.btnUserPanel.BackColor = System.Drawing.Color.FromArgb(39, 174, 96);
-            };
-            this.btnUserPanel.MouseLeave += (s, e) => {
-                this.btnUserPanel.BackColor = System.Drawing.Color.FromArgb(46, 204, 113);
-            };
 
             // Admin giriş paneli
             this.panelAdminLogin = new System.Windows.Forms.Panel();
