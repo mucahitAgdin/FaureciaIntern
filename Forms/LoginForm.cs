@@ -276,5 +276,15 @@ namespace TicketApp.Forms
         {
             MessageBox.Show(message, "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+
+        private void lblChoosePanel_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void lblFormSubtitle_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

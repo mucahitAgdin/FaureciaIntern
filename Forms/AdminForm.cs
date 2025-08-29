@@ -62,46 +62,58 @@ namespace TicketApp.Forms
         /// </summary>
         private void InitializeContextMenu()
         {
-            statusContextMenu = new ContextMenuStrip();
+            statusContextMenu = new ContextMenuStrip
+            {
+                BackColor = Color.White,
+                ForeColor = ColorTranslator.FromHtml("#212121"),
+                Font = new Font("Segoe UI", 9F)
+            };
 
-            // "İşleme Al" ana menüsü
-            var islemeAlSubMenu = new ToolStripMenuItem("İşleme Al →");
-            islemeAlSubMenu.BackColor = Color.LightBlue;
-            islemeAlSubMenu.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            // "İşleme Al" ana menüsü (mavi)
+            var islemeAlSubMenu = new ToolStripMenuItem("İşleme Al →")
+            {
+                BackColor = ColorTranslator.FromHtml("#0066FF"),
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold)
+            };
 
-            // Her destek ekibi üyesi için alt menü oluştur
             foreach (var person in supportTeam)
             {
-                var personItem = new ToolStripMenuItem(person);
-                personItem.BackColor = Color.White;
-                personItem.ForeColor = Color.Black;
+                var personItem = new ToolStripMenuItem(person)
+                {
+                    BackColor = Color.White,
+                    ForeColor = ColorTranslator.FromHtml("#212121"),
+                    Font = new Font("Segoe UI", 9F)
+                };
                 personItem.Click += (s, e) => AssignAndChangeStatus(person);
                 islemeAlSubMenu.DropDownItems.Add(personItem);
             }
 
-            // "Çözüldü" menüsü
-            var cozulduItem = new ToolStripMenuItem("Çözüldü");
+            // "Çözüldü" menüsü (yeşil)
+            var cozulduItem = new ToolStripMenuItem("Çözüldü")
+            {
+                BackColor = ColorTranslator.FromHtml("#28A745"),
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold)
+            };
             cozulduItem.Click += (s, e) => ChangeTicketStatus("çözüldü");
-            cozulduItem.BackColor = Color.LightGreen;
-            cozulduItem.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
 
-            // "Beklemede" menüsü
-            var beklemedeyeAlItem = new ToolStripMenuItem("Beklemede");
+            // "Beklemede" menüsü (sarı)
+            var beklemedeyeAlItem = new ToolStripMenuItem("Beklemede")
+            {
+                BackColor = ColorTranslator.FromHtml("#FFC107"),
+                ForeColor = ColorTranslator.FromHtml("#212121"),
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold)
+            };
             beklemedeyeAlItem.Click += (s, e) => ChangeTicketStatus("beklemede");
-            beklemedeyeAlItem.BackColor = Color.LightYellow;
-            beklemedeyeAlItem.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
 
             // Menü öğelerini ekle
             statusContextMenu.Items.AddRange(new ToolStripItem[] {
-                islemeAlSubMenu,
-                new ToolStripSeparator(),
-                cozulduItem,
-                beklemedeyeAlItem
-            });
-
-            // Context menü stilini ayarla
-            statusContextMenu.BackColor = Color.White;
-            statusContextMenu.ForeColor = Color.Black;
+        islemeAlSubMenu,
+        new ToolStripSeparator(),
+        cozulduItem,
+        beklemedeyeAlItem
+    });
         }
 
         #endregion
