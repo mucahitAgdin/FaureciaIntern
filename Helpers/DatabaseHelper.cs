@@ -1,7 +1,6 @@
 ﻿// Helpers/DatabaseHelper.cs
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
@@ -10,214 +9,137 @@ using TicketApp.Models;
 namespace TicketApp.Helpers
 {
     /// <summary>
-    /// SQLite veritabanı işlemlerini yöneten güvenli yardımcı sınıf.
-    /// - Tüm sorgular parametreli yazılır (SQL Injection koruması).
-    /// - Uygulama ilk açılışta InitializeDatabase() çağrılır (Program.cs)  // ref: Program.cs
-    /// - Varsayılan veri yükleme: AreaCatalog + IssueCatalog               // seed fallback
+    /// SQLite veritabanı yardımcı sınıfı.
+    /// - Tabloları oluşturur/günceller
+    /// - Ticket CRUD işlemleri
+    /// - Ayarlar (Alan↔Alt Alan, Alt Alan↔Hat, Sorun listeleri)
     /// </summary>
     public static class DatabaseHelper
     {
-        #region Fields & Consts
+        // --- Dosya ve bağlantı bilgileri ---
+        private static readonly string dbFolder =
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TicketApp");
+        private static readonly string dbPath = Path.Combine(dbFolder, "tickets.db");
+        private static readonly string connectionString = $"Data Source={dbPath};Version=3;";
 
-        // --- Tablo isimleri ---
-        private const string TICKETS_TABLE = "Tickets";
+        // --- Tablo sabitleri ---
         private const string AREAS_TABLE = "Areas";
         private const string SUBAREAS_TABLE = "SubAreas";
-        private const string LINES_TABLE = "Lines";     // YENİ: Hat tablosu
         private const string ISSUES_TABLE = "Issues";
+        private const string SUBAREA_LINES_TABLE = "SubAreaLines"; // Alt Alan -> Hat haritası
+        private const string TICKETS_TABLE = "Tickets";
 
-        // --- Konfig / Yol bilgileri ---
-        // Not: App.config'ten okuma için AppConfigReader da kullanılabilir.  // ref: AppConfigReader
-        private static readonly string dbPath =
-            ConfigurationManager.AppSettings["DatabaseFilePath"] ??
-            @"C:\TicketAppShared\tickets.db";
-
-        // Çok kullanıcılı senaryolara uygun connection string (WAL vb.)
-        private static readonly string connectionString =
-            $"Data Source={dbPath};Version=3;Journal Mode=WAL;Cache Size=10000;Temp Store=Memory;Synchronous=NORMAL;Busy Timeout=10000;Default Timeout=30;";
-
-        #endregion
-
-        #region Initialize & Schema
-
-        /// <summary>
-        /// Veritabanını ve tabloları hazırlar; yoksa oluşturur; seed verileri yükler.
-        /// Program başlangıcında bir kez çağrılır. (Program.cs)  // ref: Program.cs
-        /// </summary>
+        // --- Genel kurulum ---
         public static void InitializeDatabase()
         {
-            try
+            Directory.CreateDirectory(dbFolder);
+            bool createNew = !File.Exists(dbPath);
+
+            if (createNew)
+                SQLiteConnection.CreateFile(dbPath);
+
+            using (var conn = new SQLiteConnection(connectionString))
             {
-                var folder = Path.GetDirectoryName(dbPath);
-                if (string.IsNullOrWhiteSpace(folder))
-                    throw new Exception($"Veritabanı yolu geçersiz: {dbPath}");
-
-                if (!Directory.Exists(folder))
-                {
-                    Directory.CreateDirectory(folder);
-                    Logger.Log($"Veritabanı klasörü oluşturuldu: {folder}");
-                }
-
-                if (!File.Exists(dbPath))
-                {
-                    SQLiteConnection.CreateFile(dbPath);
-                    Logger.Log("Veritabanı dosyası oluşturuldu.");
-                }
-
-                // Erişim kontrolü
-                using (var fs = File.Open(dbPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) { }
-
-                using (var conn = new SQLiteConnection(connectionString))
-                {
-                    conn.Open();
-                    using (var tx = conn.BeginTransaction())
-                    {
-                        try
-                        {
-                            CreateTables(conn);           // tüm tablolar (Lines dahil)
-                            UpdateExistingTables(conn);   // eksik kolonları ekle (Line vb.)
-                            LoadDefaultDataIfEmpty(conn); // seed: AreaCatalog + IssueCatalog
-                            tx.Commit();
-                            Logger.Log("Veritabanı başarıyla başlatıldı.");
-                        }
-                        catch (Exception ex)
-                        {
-                            tx.Rollback();
-                            Logger.Log($"Initialize transaction geri alındı: {ex.Message}");
-                            throw;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Log(ex);
-                throw new Exception("Veritabanı başlatılamadı", ex);
+                conn.Open();
+                CreateTables(conn);            // Tabloları oluştur
+                UpdateExistingTables(conn);    // Eksik kolonları ekle (migration)
+                if (createNew) LoadDefaultDataIfEmpty(conn); // Varsayılan veriler
             }
         }
 
-        /// <summary>
-        /// Tüm tabloları oluşturur (idempotent). Yeni: Lines (Hat) tablosu ve Tickets.Line kolonu.
-        /// </summary>
+        /// <summary>Gerekli tüm tabloları oluşturur.</summary>
         private static void CreateTables(SQLiteConnection conn)
         {
-            // Ana alanlar
-            string createAreas = $@"
-            CREATE TABLE IF NOT EXISTS {AREAS_TABLE}(
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                AreaName TEXT NOT NULL UNIQUE,
-                CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
-            );";
+            // Areas
+            string createAreasTable = $@"
+                CREATE TABLE IF NOT EXISTS {AREAS_TABLE}(
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    AreaName TEXT NOT NULL UNIQUE
+                );";
 
-            // Alt alanlar
-            string createSubAreas = $@"
-            CREATE TABLE IF NOT EXISTS {SUBAREAS_TABLE}(
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                AreaId INTEGER NOT NULL,
-                SubAreaName TEXT NOT NULL,
-                CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(AreaId) REFERENCES {AREAS_TABLE}(Id) ON DELETE CASCADE,
-                UNIQUE(AreaId, SubAreaName)
-            );";
+            // SubAreas (AreaId yabancı anahtar)
+            string createSubAreasTable = $@"
+                CREATE TABLE IF NOT EXISTS {SUBAREAS_TABLE}(
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    AreaId INTEGER NOT NULL,
+                    SubAreaName TEXT NOT NULL,
+                    UNIQUE(AreaId, SubAreaName)
+                );";
 
-            // YENİ: Hatlar
-            string createLines = $@"
-            CREATE TABLE IF NOT EXISTS {LINES_TABLE}(
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                SubAreaId INTEGER NOT NULL,
-                LineName TEXT NOT NULL,
-                CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(SubAreaId) REFERENCES {SUBAREAS_TABLE}(Id) ON DELETE CASCADE,
-                UNIQUE(SubAreaId, LineName)
-            );";
+            // Issues (Alan bazlı + GENEL)
+            string createIssuesTable = $@"
+                CREATE TABLE IF NOT EXISTS {ISSUES_TABLE}(
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    AreaName TEXT NOT NULL,
+                    IssueName TEXT NOT NULL,
+                    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(AreaName, IssueName)
+                );";
 
-            // Sorun tipleri (alan bazlı)
-            string createIssues = $@"
-            CREATE TABLE IF NOT EXISTS {ISSUES_TABLE}(
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                AreaName TEXT NOT NULL,
-                IssueName TEXT NOT NULL,
-                CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(AreaName, IssueName)
-            );";
+            // Alt Alan -> Hat eşlemesi
+            string createSubAreaLinesTable = $@"
+                CREATE TABLE IF NOT EXISTS {SUBAREA_LINES_TABLE}(
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    SubAreaName TEXT NOT NULL,
+                    LineName TEXT NOT NULL,
+                    UNIQUE(SubAreaName, LineName)
+                );";
 
-            // Ticketlar
-            // Not: Yeni kurulumlarda Line kolonu doğrudan burada var.
-            string createTickets = $@"
-            CREATE TABLE IF NOT EXISTS {TICKETS_TABLE}(
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Area TEXT NOT NULL,
-                SubArea TEXT,
-                Line TEXT,                      -- YENİ: Hat
-                Issue TEXT NOT NULL,
-                Description TEXT NOT NULL,
-                FirstName TEXT NOT NULL,
-                LastName TEXT NOT NULL,
-                PhoneNumber TEXT NOT NULL,
-                CreatedAt DATETIME NOT NULL,
-                IsResolved INTEGER DEFAULT 0,
-                Status TEXT DEFAULT 'beklemede' CHECK(Status IN ('beklemede','işlemde','çözüldü','reddedildi')),
-                AssignedTo TEXT,
-                RejectionReason TEXT,
-                UpdatedAt DATETIME,
-                ResolvedAt DATETIME
-            );";
+            // Tickets ana tablo (Admin/Main ile birebir uyumlu)  :contentReference[oaicite:6]{index=6}
+            string createTicketsTable = $@"
+                CREATE TABLE IF NOT EXISTS {TICKETS_TABLE}(
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Area TEXT NOT NULL,
+                    SubArea TEXT,
+                    Issue TEXT NOT NULL,
+                    Description TEXT NOT NULL,
+                    FirstName TEXT NOT NULL,
+                    LastName TEXT NOT NULL,
+                    PhoneNumber TEXT NOT NULL,
+                    CreatedAt DATETIME NOT NULL,
+                    IsResolved INTEGER DEFAULT 0,
+                    Status TEXT DEFAULT 'beklemede'
+                        CHECK(Status IN ('beklemede','işlemde','çözüldü','reddedildi')),
+                    AssignedTo TEXT,
+                    RejectionReason TEXT,
+                    UpdatedAt DATETIME,
+                    ResolvedAt DATETIME
+                );";
 
-            // Indexler
-            string createIndexes = $@"
-            CREATE INDEX IF NOT EXISTS idx_tickets_status   ON {TICKETS_TABLE}(Status);
-            CREATE INDEX IF NOT EXISTS idx_tickets_area     ON {TICKETS_TABLE}(Area);
-            CREATE INDEX IF NOT EXISTS idx_tickets_created  ON {TICKETS_TABLE}(CreatedAt);
-            CREATE INDEX IF NOT EXISTS idx_tickets_assigned ON {TICKETS_TABLE}(AssignedTo);
-            CREATE INDEX IF NOT EXISTS idx_lines_subarea    ON {LINES_TABLE}(SubAreaId);
+            // Performans index'leri
+            string createIndexes = @"
+                CREATE INDEX IF NOT EXISTS idx_tickets_status ON Tickets(Status);
+                CREATE INDEX IF NOT EXISTS idx_tickets_area ON Tickets(Area);
+                CREATE INDEX IF NOT EXISTS idx_tickets_created ON Tickets(CreatedAt);
+                CREATE INDEX IF NOT EXISTS idx_tickets_assigned ON Tickets(AssignedTo);
             ";
 
-            ExecuteNonQuery(conn, createAreas);
-            ExecuteNonQuery(conn, createSubAreas);
-            ExecuteNonQuery(conn, createLines);
-            ExecuteNonQuery(conn, createIssues);
-            ExecuteNonQuery(conn, createTickets);
+            ExecuteNonQuery(conn, createAreasTable);
+            ExecuteNonQuery(conn, createSubAreasTable);
+            ExecuteNonQuery(conn, createIssuesTable);
+            ExecuteNonQuery(conn, createSubAreaLinesTable);
+            ExecuteNonQuery(conn, createTicketsTable);
             ExecuteNonQuery(conn, createIndexes);
         }
 
-        /// <summary>
-        /// Mevcut kurulumlarda eksik kolon/tabloları güvenle ekler (non-breaking migration).
-        /// </summary>
+        /// <summary>Var olan tablolara eksik kolonları ekler (migration).</summary>
         private static void UpdateExistingTables(SQLiteConnection conn)
         {
             try
             {
-                // 1) Tickets tabloda eksik kolon var mı?
-                var ticketCols = GetTableColumns(conn, TICKETS_TABLE)
-                                 ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var existingColumns = GetTableColumns(conn, TICKETS_TABLE);
 
-                var addColumns = new Dictionary<string, string>
+                var columnsToAdd = new Dictionary<string, string>
                 {
-                    // Eski sürümlerde bulunmayabilir:
                     ["UpdatedAt"] = $"ALTER TABLE {TICKETS_TABLE} ADD COLUMN UpdatedAt DATETIME;",
-                    ["ResolvedAt"] = $"ALTER TABLE {TICKETS_TABLE} ADD COLUMN ResolvedAt DATETIME;",
-                    ["Line"] = $"ALTER TABLE {TICKETS_TABLE} ADD COLUMN Line TEXT;" // YENİ
+                    ["ResolvedAt"] = $"ALTER TABLE {TICKETS_TABLE} ADD COLUMN ResolvedAt DATETIME;"
                 };
 
-                foreach (var kv in addColumns)
+                foreach (var column in columnsToAdd)
                 {
-                    if (!ticketCols.Contains(kv.Key))
-                    {
-                        ExecuteNonQuery(conn, kv.Value);
-                        Logger.Log($"'{kv.Key}' kolonu {TICKETS_TABLE} tablosuna eklendi.");
-                    }
+                    if (!existingColumns.Contains(column.Key, StringComparer.OrdinalIgnoreCase))
+                        ExecuteNonQuery(conn, column.Value);
                 }
-
-                // 2) Lines tablosu yoksa oluştur (CreateTables zaten idempotent ama garanti için)
-                ExecuteNonQuery(conn, $@"
-                    CREATE TABLE IF NOT EXISTS {LINES_TABLE}(
-                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        SubAreaId INTEGER NOT NULL,
-                        LineName TEXT NOT NULL,
-                        CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY(SubAreaId) REFERENCES {SUBAREAS_TABLE}(Id) ON DELETE CASCADE,
-                        UNIQUE(SubAreaId, LineName)
-                    );");
             }
             catch (Exception ex)
             {
@@ -225,274 +147,236 @@ namespace TicketApp.Helpers
             }
         }
 
-        /// <summary>
-        /// İlk kurulumda alan/alt alan ve sorun tiplerini seed eder.
-        /// </summary>
+        /// <summary>İlk kurulumda kataloglardan varsayılan verileri yükler.</summary>
         private static void LoadDefaultDataIfEmpty(SQLiteConnection conn)
         {
-            var count = Convert.ToInt32(ExecuteScalar(conn, $"SELECT COUNT(*) FROM {AREAS_TABLE}"));
-            if (count > 0) return;
+            // Areas boşsa katalogları bas
+            int areaCount = Convert.ToInt32(ExecuteScalar(conn, $"SELECT COUNT(*) FROM {AREAS_TABLE}"));
+            if (areaCount == 0)
+            {
+                var areaMap = AreaCatalog.GetAreaSubAreaMap();
+                SaveAreaSubAreaMapInternal(conn, areaMap);
 
-            Logger.Log("Varsayılan veriler yükleniyor...");
-
-            // Alan & Alt Alan seed
-            var areaMap = AreaCatalog.GetAreaSubAreaMap();     // ref: AreaCatalog
-            SaveAreaSubAreaMapInternal(conn, areaMap);
-
-            // (İsteğe bağlı) Hat seed — şu an boş bırakıyoruz; SettingsForm üzerinden eklenecek.
-
-            // Sorun tipi seed
-            var issueMap = IssueCatalog.GetIssueMap();         // ref: IssueCatalog
-            SaveIssueMapInternal(conn, issueMap);
-
-            Logger.Log("Varsayılan veriler yüklendi.");
+                var issueMap = IssueCatalog.GetIssueMap();
+                SaveIssueMapInternal(conn, issueMap);
+            }
         }
 
-        #endregion
+        // =========================================================
+        // ================  TICKET OPERASYONLARI  =================
+        // =========================================================
 
-        #region Ticket CRUD
-
-        /// <summary>
-        /// Yeni ticket ekler. (Alan, Alt Alan, Hat (Line), Sorun, Kişi bilgileri…)
-        /// </summary>
+        /// <summary>Yeni ticket ekler.</summary>
         public static int InsertTicket(Ticket ticket)
         {
             if (ticket == null) throw new ArgumentNullException(nameof(ticket));
             ValidateTicket(ticket);
 
-            string insert = $@"
-            INSERT INTO {TICKETS_TABLE}(
-                Area, SubArea, Line, Issue, Description,
-                FirstName, LastName, PhoneNumber,
-                CreatedAt, Status, IsResolved,
-                AssignedTo, RejectionReason
-            ) VALUES (
-                @Area, @SubArea, @Line, @Issue, @Description,
-                @FirstName, @LastName, @PhoneNumber,
-                @CreatedAt, @Status, @IsResolved,
-                @AssignedTo, @RejectionReason
-            );
-            SELECT last_insert_rowid();";
+            string insertQuery = $@"
+                INSERT INTO {TICKETS_TABLE}
+                (Area, SubArea, Issue, Description, FirstName, LastName, PhoneNumber,
+                 CreatedAt, IsResolved, Status, AssignedTo, RejectionReason)
+                VALUES
+                (@Area, @SubArea, @Issue, @Description, @FirstName, @LastName, @PhoneNumber,
+                 @CreatedAt, @IsResolved, @Status, @AssignedTo, @RejectionReason);
+                SELECT last_insert_rowid();";
 
             using (var conn = new SQLiteConnection(connectionString))
             {
                 conn.Open();
-                using (var cmd = new SQLiteCommand(insert, conn))
+                using (var cmd = new SQLiteCommand(insertQuery, conn))
                 {
                     cmd.Parameters.AddWithValue("@Area", ticket.Area);
                     cmd.Parameters.AddWithValue("@SubArea", (object)ticket.SubArea ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Line", (object)ticket.Line ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@Issue", ticket.Issue);
                     cmd.Parameters.AddWithValue("@Description", ticket.Description);
                     cmd.Parameters.AddWithValue("@FirstName", ticket.FirstName);
                     cmd.Parameters.AddWithValue("@LastName", ticket.LastName);
                     cmd.Parameters.AddWithValue("@PhoneNumber", ticket.PhoneNumber);
                     cmd.Parameters.AddWithValue("@CreatedAt", ticket.CreatedAt);
+                    cmd.Parameters.AddWithValue("@IsResolved", ticket.IsResolved);
                     cmd.Parameters.AddWithValue("@Status", ticket.Status ?? "beklemede");
-                    cmd.Parameters.AddWithValue("@IsResolved", ticket.IsResolved ? 1 : 0);
                     cmd.Parameters.AddWithValue("@AssignedTo", (object)ticket.AssignedTo ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@RejectionReason", (object)ticket.RejectionReason ?? DBNull.Value);
 
                     ticket.Id = Convert.ToInt32(cmd.ExecuteScalar());
-                    Logger.Log($"Yeni ticket eklendi: #{ticket.Id}");
                     return ticket.Id;
                 }
             }
         }
 
-        /// <summary>Tüm ticket'ları (en yeni üstte) döndürür.</summary>
+        /// <summary>Tüm ticket’ları getirir.</summary>
         public static List<Ticket> GetAllTickets()
         {
-            var list = new List<Ticket>();
-            string sql = $@"SELECT * FROM {TICKETS_TABLE} ORDER BY CreatedAt DESC, Id DESC;";
+            string q = $@"
+                SELECT Id, Area, SubArea, Issue, Description,
+                       FirstName, LastName, PhoneNumber, CreatedAt,
+                       IsResolved, Status, AssignedTo, RejectionReason,
+                       UpdatedAt, ResolvedAt
+                FROM {TICKETS_TABLE}
+                ORDER BY CreatedAt DESC";
+
+            return ExecuteTicketQuery(q);
+        }
+
+        /// <summary>Duruma göre ticket’lar.</summary>
+        public static List<Ticket> GetTicketsByStatus(string status)
+        {
+            string q = $@"
+                SELECT Id, Area, SubArea, Issue, Description,
+                       FirstName, LastName, PhoneNumber, CreatedAt,
+                       IsResolved, Status, AssignedTo, RejectionReason,
+                       UpdatedAt, ResolvedAt
+                FROM {TICKETS_TABLE}
+                WHERE Status = @Status
+                ORDER BY CreatedAt DESC";
+
+            return ExecuteTicketQuery(q, ("@Status", status));
+        }
+
+        /// <summary>Kullanıcıya göre ticket’lar.</summary>
+        public static List<Ticket> GetTicketsByUser(string firstName, string lastName, string phoneNumber)
+        {
+            string q = $@"
+                SELECT Id, Area, SubArea, Issue, Description,
+                       FirstName, LastName, PhoneNumber, CreatedAt,
+                       IsResolved, Status, AssignedTo, RejectionReason,
+                       UpdatedAt, ResolvedAt
+                FROM {TICKETS_TABLE}
+                WHERE FirstName = @FirstName AND LastName = @LastName AND PhoneNumber = @PhoneNumber
+                ORDER BY CreatedAt DESC";
+
+            return ExecuteTicketQuery(q,
+                ("@FirstName", firstName),
+                ("@LastName", lastName),
+                ("@PhoneNumber", phoneNumber));
+        }
+
+        /// <summary>
+        /// Ticket durumunu/atananı güvenli şekilde günceller (AdminForm çağrısı ile birebir).
+        /// - Status, AssignedTo, IsResolved, RejectionReason, UpdatedAt, ResolvedAt alanlarını set eder.
+        /// </summary>
+        public static bool UpdateTicketStatus(Ticket ticket)
+        {
+            if (ticket == null || ticket.Id <= 0) return false;
+
+            string updateQuery = $@"
+                UPDATE {TICKETS_TABLE}
+                SET Status = @Status,
+                    AssignedTo = @AssignedTo,
+                    IsResolved = @IsResolved,
+                    RejectionReason = @RejectionReason,
+                    UpdatedAt = @UpdatedAt,
+                    ResolvedAt = @ResolvedAt
+                WHERE Id = @Id";
 
             using (var conn = new SQLiteConnection(connectionString))
-            using (var cmd = new SQLiteCommand(sql, conn))
             {
                 conn.Open();
-                using (var r = cmd.ExecuteReader())
+                using (var cmd = new SQLiteCommand(updateQuery, conn))
                 {
-                    while (r.Read()) list.Add(MapReaderToTicket(r));
+                    cmd.Parameters.AddWithValue("@Status", ticket.Status);
+                    cmd.Parameters.AddWithValue("@AssignedTo", (object)ticket.AssignedTo ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@IsResolved", ticket.IsResolved);
+                    cmd.Parameters.AddWithValue("@RejectionReason", (object)ticket.RejectionReason ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@UpdatedAt", DateTime.Now);
+                    cmd.Parameters.AddWithValue("@ResolvedAt",
+                        ticket.Status == "çözüldü" ? (object)DateTime.Now : DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Id", ticket.Id);
+
+                    int affected = cmd.ExecuteNonQuery();
+                    return affected > 0;
                 }
             }
-            return list;
         }
+        // (AdminForm bu metodu böyle çağırıyor: `DatabaseHelper.UpdateTicketStatus(ticket)` — çağrı uyumu kanıtı) 
 
-        /// <summary>Çözülen ticket'ları getirir.</summary>
-        public static List<Ticket> GetResolvedTickets()
+        /// <summary>Ticket sil.</summary>
+        public static bool DeleteTicket(int ticketId)
         {
-            var list = new List<Ticket>();
-            string sql = $@"SELECT * FROM {TICKETS_TABLE} WHERE IsResolved=1 OR Status='çözüldü' ORDER BY ResolvedAt DESC, UpdatedAt DESC;";
+            if (ticketId <= 0) return false;
+            string q = $"DELETE FROM {TICKETS_TABLE} WHERE Id = @Id";
 
             using (var conn = new SQLiteConnection(connectionString))
-            using (var cmd = new SQLiteCommand(sql, conn))
             {
                 conn.Open();
-                using (var r = cmd.ExecuteReader())
+                using (var cmd = new SQLiteCommand(q, conn))
                 {
-                    while (r.Read()) list.Add(MapReaderToTicket(r));
-                }
-            }
-            return list;
-        }
-
-        /// <summary>Çözülen ticket'ları arşiv dosyasına yazar (yeni SQLite dosyası) ve kaydeder.</summary>
-        public static void ArchiveTickets(List<Ticket> tickets, string archiveFileName)
-        {
-            if (tickets == null || tickets.Count == 0) return;
-
-            string archivePath = Path.Combine(Path.GetDirectoryName(dbPath) ?? "", archiveFileName);
-            if (!File.Exists(archivePath)) SQLiteConnection.CreateFile(archivePath);
-
-            string cs = $"Data Source={archivePath};Version=3;Journal Mode=WAL;Synchronous=NORMAL;";
-            using (var conn = new SQLiteConnection(cs))
-            {
-                conn.Open();
-
-                // Arşivde tabloyu oluştur
-                string create = @"
-                CREATE TABLE IF NOT EXISTS TicketsArchive(
-                    Id INTEGER,
-                    Area TEXT, SubArea TEXT, Line TEXT,
-                    Issue TEXT, Description TEXT,
-                    FirstName TEXT, LastName TEXT, PhoneNumber TEXT,
-                    CreatedAt DATETIME, IsResolved INTEGER, Status TEXT,
-                    AssignedTo TEXT, RejectionReason TEXT, UpdatedAt DATETIME, ResolvedAt DATETIME
-                );";
-                ExecuteNonQuery(conn, create);
-
-                using (var tx = conn.BeginTransaction())
-                {
-                    try
-                    {
-                        string ins = @"
-                        INSERT INTO TicketsArchive
-                        (Id, Area, SubArea, Line, Issue, Description, FirstName, LastName, PhoneNumber, CreatedAt, IsResolved, Status, AssignedTo, RejectionReason, UpdatedAt, ResolvedAt)
-                        VALUES
-                        (@Id,@Area,@SubArea,@Line,@Issue,@Description,@FirstName,@LastName,@PhoneNumber,@CreatedAt,@IsResolved,@Status,@AssignedTo,@RejectionReason,@UpdatedAt,@ResolvedAt);";
-
-                        foreach (var t in tickets)
-                        {
-                            using (var cmd = new SQLiteCommand(ins, conn))
-                            {
-                                cmd.Parameters.AddWithValue("@Id", t.Id);
-                                cmd.Parameters.AddWithValue("@Area", t.Area);
-                                cmd.Parameters.AddWithValue("@SubArea", (object)t.SubArea ?? DBNull.Value);
-                                cmd.Parameters.AddWithValue("@Line", (object)t.Line ?? DBNull.Value);
-                                cmd.Parameters.AddWithValue("@Issue", t.Issue);
-                                cmd.Parameters.AddWithValue("@Description", t.Description);
-                                cmd.Parameters.AddWithValue("@FirstName", t.FirstName);
-                                cmd.Parameters.AddWithValue("@LastName", t.LastName);
-                                cmd.Parameters.AddWithValue("@PhoneNumber", t.PhoneNumber);
-                                cmd.Parameters.AddWithValue("@CreatedAt", t.CreatedAt);
-                                cmd.Parameters.AddWithValue("@IsResolved", t.IsResolved ? 1 : 0);
-                                cmd.Parameters.AddWithValue("@Status", t.Status);
-                                cmd.Parameters.AddWithValue("@AssignedTo", (object)t.AssignedTo ?? DBNull.Value);
-                                cmd.Parameters.AddWithValue("@RejectionReason", (object)t.RejectionReason ?? DBNull.Value);
-                                cmd.Parameters.AddWithValue("@UpdatedAt", (object)t.UpdatedAt ?? DBNull.Value);
-                                cmd.Parameters.AddWithValue("@ResolvedAt", (object)t.ResolvedAt ?? DBNull.Value);
-                                cmd.ExecuteNonQuery();
-                            }
-                        }
-
-                        tx.Commit();
-                    }
-                    catch (Exception ex)
-                    {
-                        tx.Rollback();
-                        Logger.Log(ex);
-                        throw;
-                    }
+                    cmd.Parameters.AddWithValue("@Id", ticketId);
+                    return cmd.ExecuteNonQuery() > 0;
                 }
             }
         }
 
-        /// <summary>Çözülen ticket'ları ana veritabanından siler.</summary>
-        public static void DeleteResolvedTickets()
-        {
-            ExecuteNonQuery(connectionString, $@"DELETE FROM {TICKETS_TABLE} WHERE IsResolved=1 OR Status='çözüldü';");
-        }
+        // =========================================================
+        // ==============  ALAN / ALT ALAN / HAT / SORUN  =========
+        // =========================================================
 
-        /// <summary>DataReader satırını Ticket nesnesine map eder. (Line dahil)</summary>
-        private static Ticket MapReaderToTicket(SQLiteDataReader r)
+        /// <summary>Alan↔Alt Alan haritasını kaydeder.</summary>
+        public static void SaveAreaSubAreaMap(Dictionary<string, List<string>> areaMap)
         {
-            return new Ticket
+            using (var conn = new SQLiteConnection(connectionString))
             {
-                Id = Convert.ToInt32(r["Id"]),
-                Area = Convert.ToString(r["Area"]),
-                SubArea = r["SubArea"] == DBNull.Value ? null : Convert.ToString(r["SubArea"]),
-                Line = r["Line"] == DBNull.Value ? null : Convert.ToString(r["Line"]), // YENİ
-                Issue = Convert.ToString(r["Issue"]),
-                Description = Convert.ToString(r["Description"]),
-                FirstName = Convert.ToString(r["FirstName"]),
-                LastName = Convert.ToString(r["LastName"]),
-                PhoneNumber = Convert.ToString(r["PhoneNumber"]),
-                CreatedAt = Convert.ToDateTime(r["CreatedAt"]),
-                IsResolved = Convert.ToInt32(r["IsResolved"]) == 1,
-                Status = Convert.ToString(r["Status"]),
-                AssignedTo = r["AssignedTo"] == DBNull.Value ? null : Convert.ToString(r["AssignedTo"]),
-                RejectionReason = r["RejectionReason"] == DBNull.Value ? null : Convert.ToString(r["RejectionReason"]),
-                UpdatedAt = r["UpdatedAt"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(r["UpdatedAt"]),
-                ResolvedAt = r["ResolvedAt"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(r["ResolvedAt"])
-            };
+                conn.Open();
+                using (var tr = conn.BeginTransaction())
+                {
+                    SaveAreaSubAreaMapInternal(conn, areaMap);
+                    tr.Commit();
+                }
+            }
         }
 
-        /// <summary>Temel doğrulama: zorunlu alanlar ve uzunluklar.</summary>
-        private static void ValidateTicket(Ticket t)
+        private static void SaveAreaSubAreaMapInternal(SQLiteConnection conn, Dictionary<string, List<string>> areaMap)
         {
-            if (string.IsNullOrWhiteSpace(t.Area)) throw new ArgumentException("Alan boş olamaz.");
-            if (string.IsNullOrWhiteSpace(t.SubArea)) throw new ArgumentException("Alt Alan boş olamaz.");
-            if (string.IsNullOrWhiteSpace(t.Line)) throw new ArgumentException("Hat (Line) boş olamaz."); // YENİ
-            if (string.IsNullOrWhiteSpace(t.Issue)) throw new ArgumentException("Sorun tipi boş olamaz.");
-            if (string.IsNullOrWhiteSpace(t.Description)) throw new ArgumentException("Açıklama boş olamaz.");
-            if (string.IsNullOrWhiteSpace(t.FirstName)) throw new ArgumentException("Ad boş olamaz.");
-            if (string.IsNullOrWhiteSpace(t.LastName)) throw new ArgumentException("Soyad boş olamaz.");
-            if (string.IsNullOrWhiteSpace(t.PhoneNumber)) throw new ArgumentException("Telefon boş olamaz.");
-            if (t.Description.Length > 300) throw new ArgumentException("Açıklama en fazla 300 karakter olmalıdır.");
+            // Tabloları boşalt ve yeniden yaz
+            ExecuteNonQuery(conn, $"DELETE FROM {SUBAREAS_TABLE}");
+            ExecuteNonQuery(conn, $"DELETE FROM {AREAS_TABLE}");
+
+            // Alanları insert et
+            var areaIdCache = new Dictionary<string, long>();
+            foreach (var kv in areaMap)
+            {
+                ExecuteNonQuery(conn, $"INSERT OR IGNORE INTO {AREAS_TABLE}(AreaName) VALUES (@name)",
+                    ("@name", kv.Key));
+
+                long areaId = Convert.ToInt64(
+                    ExecuteScalar(conn, $"SELECT Id FROM {AREAS_TABLE} WHERE AreaName=@n", ("@n", kv.Key)));
+                areaIdCache[kv.Key] = areaId;
+
+                // Alt alanları insert et
+                foreach (var sub in kv.Value.Distinct())
+                {
+                    ExecuteNonQuery(conn,
+                        $"INSERT OR IGNORE INTO {SUBAREAS_TABLE}(AreaId, SubAreaName) VALUES (@a,@s)",
+                        ("@a", areaId), ("@s", sub));
+                }
+            }
         }
 
-        #endregion
-
-        #region Area/SubArea (Mevcut)
-
-        /// <summary>DB'den Alan→Alt Alan haritasını döndürür.</summary>
+        /// <summary>Alan↔Alt Alan haritasını okur.</summary>
         public static Dictionary<string, List<string>> GetAreaSubAreaMap()
         {
-            var map = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+            var map = new Dictionary<string, List<string>>();
 
-            string sqlAreas = $@"SELECT Id, AreaName FROM {AREAS_TABLE} ORDER BY AreaName;";
-            string sqlSubs = $@"SELECT s.Id, a.AreaName, s.SubAreaName
-                                 FROM {SUBAREAS_TABLE} s
-                                 JOIN {AREAS_TABLE} a ON a.Id = s.AreaId
-                                 ORDER BY a.AreaName, s.SubAreaName;";
+            string q = $@"
+                SELECT a.AreaName, s.SubAreaName
+                FROM {AREAS_TABLE} a
+                LEFT JOIN {SUBAREAS_TABLE} s ON a.Id = s.AreaId
+                ORDER BY a.AreaName, s.SubAreaName";
 
             using (var conn = new SQLiteConnection(connectionString))
             {
                 conn.Open();
-
-                // Alanlar
-                var areaIdToName = new Dictionary<long, string>();
-                using (var cmd = new SQLiteCommand(sqlAreas, conn))
+                using (var cmd = new SQLiteCommand(q, conn))
                 using (var r = cmd.ExecuteReader())
                 {
                     while (r.Read())
                     {
-                        var name = Convert.ToString(r["AreaName"]);
-                        map[name] = new List<string>();
-                    }
-                }
+                        var area = r["AreaName"].ToString();
+                        var sub = r["SubAreaName"]?.ToString();
 
-                // Alt alanlar
-                using (var cmd = new SQLiteCommand(sqlSubs, conn))
-                using (var r = cmd.ExecuteReader())
-                {
-                    while (r.Read())
-                    {
-                        string areaName = Convert.ToString(r["AreaName"]);
-                        string subName = Convert.ToString(r["SubAreaName"]);
-                        if (!map.ContainsKey(areaName))
-                            map[areaName] = new List<string>();
-                        map[areaName].Add(subName);
+                        if (!map.ContainsKey(area)) map[area] = new List<string>();
+                        if (!string.IsNullOrEmpty(sub)) map[area].Add(sub);
                     }
                 }
             }
@@ -500,332 +384,237 @@ namespace TicketApp.Helpers
             return map;
         }
 
-        /// <summary>Area/SubArea haritasını tek transaction’da kaydeder (seed veya SettingsForm kaydet).</summary>
-        public static void SaveAreaSubAreaMap(Dictionary<string, List<string>> map)
+        /// <summary>Alt Alan ↔ Hat haritasını kaydeder.</summary>
+        public static void SaveSubAreaLineMap(Dictionary<string, List<string>> subAreaLineMap)
         {
-            if (map == null) throw new ArgumentNullException(nameof(map));
+            if (subAreaLineMap == null) return;
+
             using (var conn = new SQLiteConnection(connectionString))
             {
                 conn.Open();
-                using (var tx = conn.BeginTransaction())
+                using (var tr = conn.BeginTransaction())
                 {
-                    try
+                    // Basit yaklaşım: tamamını sil-yaz
+                    ExecuteNonQuery(conn, $"DELETE FROM {SUBAREA_LINES_TABLE}");
+
+                    foreach (var kv in subAreaLineMap)
                     {
-                        SaveAreaSubAreaMapInternal(conn, map);
-                        tx.Commit();
+                        var sub = kv.Key;
+                        foreach (var line in (kv.Value ?? new List<string>()).Distinct())
+                        {
+                            ExecuteNonQuery(conn,
+                                $"INSERT OR IGNORE INTO {SUBAREA_LINES_TABLE}(SubAreaName, LineName) VALUES (@s,@l)",
+                                ("@s", sub), ("@l", line));
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        tx.Rollback();
-                        Logger.Log(ex);
-                        throw;
-                    }
+
+                    tr.Commit();
                 }
             }
         }
 
-        /// <summary>İç kaydetme (transaction açıkken çağrılır).</summary>
-        private static void SaveAreaSubAreaMapInternal(SQLiteConnection conn, Dictionary<string, List<string>> map)
-        {
-            // Temizle
-            ExecuteNonQuery(conn, $"DELETE FROM {SUBAREAS_TABLE};");
-            ExecuteNonQuery(conn, $"DELETE FROM {AREAS_TABLE};");
-
-            // Alanları ekle
-            string insertArea = $@"INSERT INTO {AREAS_TABLE}(AreaName) VALUES(@AreaName); SELECT last_insert_rowid();";
-            string insertSub = $@"INSERT INTO {SUBAREAS_TABLE}(AreaId, SubAreaName) VALUES(@AreaId,@SubAreaName);";
-
-            foreach (var area in map.Keys)
-            {
-                long areaId;
-                using (var cmd = new SQLiteCommand(insertArea, conn))
-                {
-                    cmd.Parameters.AddWithValue("@AreaName", area);
-                    areaId = (long)(long)Convert.ToInt64(cmd.ExecuteScalar());
-                }
-
-                foreach (var sub in map[area] ?? Enumerable.Empty<string>())
-                {
-                    using (var cmd = new SQLiteCommand(insertSub, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@AreaId", areaId);
-                        cmd.Parameters.AddWithValue("@SubAreaName", sub);
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-            }
-        }
-
-        #endregion
-
-        #region Lines (Hat) — YENİ
-
-        /// <summary>Alt Alan → Hat listesini döndürür.</summary>
+        /// <summary>Alt Alan ↔ Hat haritasını okur.</summary>
         public static Dictionary<string, List<string>> GetSubAreaLineMap()
         {
-            var map = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
-
-            string sql = $@"
-            SELECT sa.SubAreaName, l.LineName
-            FROM {LINES_TABLE} l
-            JOIN {SUBAREAS_TABLE} sa ON sa.Id = l.SubAreaId
-            ORDER BY sa.SubAreaName, l.LineName;";
+            var map = new Dictionary<string, List<string>>();
+            string q = $@"SELECT SubAreaName, LineName FROM {SUBAREA_LINES_TABLE} ORDER BY SubAreaName, LineName";
 
             using (var conn = new SQLiteConnection(connectionString))
-            using (var cmd = new SQLiteCommand(sql, conn))
             {
                 conn.Open();
+                using (var cmd = new SQLiteCommand(q, conn))
                 using (var r = cmd.ExecuteReader())
                 {
                     while (r.Read())
                     {
-                        string sub = Convert.ToString(r["SubAreaName"]);
-                        string line = Convert.ToString(r["LineName"]);
+                        string sub = r["SubAreaName"].ToString();
+                        string line = r["LineName"].ToString();
+
                         if (!map.ContainsKey(sub)) map[sub] = new List<string>();
                         map[sub].Add(line);
                     }
                 }
             }
-
             return map;
         }
 
-        /// <summary>Tüm Lines haritasını (Alt Alan → Hatlar) tek transaction’da kaydeder.</summary>
-        public static void SaveSubAreaLineMap(Dictionary<string, List<string>> subAreaLineMap)
+        /// <summary>Sorun listesini kaydeder.</summary>
+        public static void SaveIssueMap(Dictionary<string, List<string>> issueMap)
         {
-            if (subAreaLineMap == null) throw new ArgumentNullException(nameof(subAreaLineMap));
-
             using (var conn = new SQLiteConnection(connectionString))
             {
                 conn.Open();
-                using (var tx = conn.BeginTransaction())
+                using (var tr = conn.BeginTransaction())
                 {
-                    try
+                    ExecuteNonQuery(conn, $"DELETE FROM {ISSUES_TABLE}");
+                    foreach (var kv in issueMap)
                     {
-                        // Tüm hatları sıfırla ve yeniden yaz.
-                        ExecuteNonQuery(conn, $"DELETE FROM {LINES_TABLE};");
-
-                        string findSub = $@"SELECT Id FROM {SUBAREAS_TABLE} WHERE SubAreaName=@Sub;";
-                        string insert = $@"INSERT INTO {LINES_TABLE}(SubAreaId, LineName) VALUES(@SubAreaId,@LineName);";
-
-                        foreach (var kv in subAreaLineMap)
+                        foreach (var issue in (kv.Value ?? new List<string>()).Distinct())
                         {
-                            long? subId = null;
-                            using (var find = new SQLiteCommand(findSub, conn))
-                            {
-                                find.Parameters.AddWithValue("@Sub", kv.Key);
-                                var obj = find.ExecuteScalar();
-                                if (obj != null && obj != DBNull.Value)
-                                    subId = Convert.ToInt64(obj);
-                            }
-
-                            if (subId == null) continue; // Alt Alan yoksa atla
-
-                            foreach (var line in kv.Value?.Distinct(StringComparer.OrdinalIgnoreCase) ?? Enumerable.Empty<string>())
-                            {
-                                using (var cmd = new SQLiteCommand(insert, conn))
-                                {
-                                    cmd.Parameters.AddWithValue("@SubAreaId", subId.Value);
-                                    cmd.Parameters.AddWithValue("@LineName", line);
-                                    cmd.ExecuteNonQuery();
-                                }
-                            }
+                            ExecuteNonQuery(conn,
+                                $"INSERT OR IGNORE INTO {ISSUES_TABLE}(AreaName, IssueName) VALUES (@a,@i)",
+                                ("@a", kv.Key), ("@i", issue));
                         }
-
-                        tx.Commit();
                     }
-                    catch (Exception ex)
-                    {
-                        tx.Rollback();
-                        Logger.Log(ex);
-                        throw;
-                    }
+                    tr.Commit();
                 }
             }
         }
 
-        /// <summary>Tek bir hat ekler (Alt Alan adına göre).</summary>
-        public static void AddLine(string subAreaName, string lineName)
-        {
-            if (string.IsNullOrWhiteSpace(subAreaName)) throw new ArgumentException("Alt Alan boş olamaz.", nameof(subAreaName));
-            if (string.IsNullOrWhiteSpace(lineName)) throw new ArgumentException("Hat adı boş olamaz.", nameof(lineName));
-
-            using (var conn = new SQLiteConnection(connectionString))
-            {
-                conn.Open();
-
-                // SubAreaId bul
-                long? subId = null;
-                using (var find = new SQLiteCommand($@"SELECT Id FROM {SUBAREAS_TABLE} WHERE SubAreaName=@s;", conn))
-                {
-                    find.Parameters.AddWithValue("@s", subAreaName);
-                    var obj = find.ExecuteScalar();
-                    if (obj != null && obj != DBNull.Value) subId = Convert.ToInt64(obj);
-                }
-                if (subId == null) throw new InvalidOperationException("Alt Alan bulunamadı.");
-
-                // Ekle
-                using (var cmd = new SQLiteCommand($@"INSERT OR IGNORE INTO {LINES_TABLE}(SubAreaId, LineName) VALUES(@id,@name);", conn))
-                {
-                    cmd.Parameters.AddWithValue("@id", subId.Value);
-                    cmd.Parameters.AddWithValue("@name", lineName);
-                    cmd.ExecuteNonQuery();
-                }
-            }
-        }
-
-        /// <summary>Hattı siler (o hatta ait ticket yoksa). True: silindi, False: engellendi.</summary>
-        public static bool DeleteLine(string subAreaName, string lineName)
-        {
-            if (HasTicketsForLine(lineName)) return false; // bağlı kayıtlar var
-
-            using (var conn = new SQLiteConnection(connectionString))
-            {
-                conn.Open();
-                string sql = $@"
-                DELETE FROM {LINES_TABLE}
-                WHERE LineName=@line
-                  AND SubAreaId IN (SELECT Id FROM {SUBAREAS_TABLE} WHERE SubAreaName=@sub);";
-
-                using (var cmd = new SQLiteCommand(sql, conn))
-                {
-                    cmd.Parameters.AddWithValue("@line", lineName);
-                    cmd.Parameters.AddWithValue("@sub", subAreaName);
-                    cmd.ExecuteNonQuery();
-                }
-            }
-            return true;
-        }
-
-        /// <summary>Belirli bir hattı kullanan ticket var mı?</summary>
-        public static bool HasTicketsForLine(string lineName)
-        {
-            if (string.IsNullOrWhiteSpace(lineName)) return false;
-            using (var conn = new SQLiteConnection(connectionString))
-            using (var cmd = new SQLiteCommand($@"SELECT COUNT(*) FROM {TICKETS_TABLE} WHERE Line=@line;", conn))
-            {
-                conn.Open();
-                cmd.Parameters.AddWithValue("@line", lineName);
-                var count = Convert.ToInt32(cmd.ExecuteScalar());
-                return count > 0;
-            }
-        }
-
-        #endregion
-
-        #region Issues (Mevcut)
-
-        /// <summary>Alan → Sorun listesi haritasını döndürür.</summary>
+        /// <summary>Sorun listesini okur.</summary>
         public static Dictionary<string, List<string>> GetIssueMap()
         {
-            var map = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
-
+            var map = new Dictionary<string, List<string>>();
             using (var conn = new SQLiteConnection(connectionString))
             {
                 conn.Open();
-
-                // DB’de tanım yoksa (ilk açılış) fallback IssueCatalog kullanılabilir.
-                string sql = $@"SELECT AreaName, IssueName FROM {ISSUES_TABLE} ORDER BY AreaName, IssueName;";
-                using (var cmd = new SQLiteCommand(sql, conn))
+                using (var cmd = new SQLiteCommand(
+                    $"SELECT AreaName, IssueName FROM {ISSUES_TABLE} ORDER BY AreaName, IssueName", conn))
                 using (var r = cmd.ExecuteReader())
                 {
                     while (r.Read())
                     {
-                        string area = Convert.ToString(r["AreaName"]);
-                        string issue = Convert.ToString(r["IssueName"]);
+                        var area = r["AreaName"].ToString();
+                        var issue = r["IssueName"].ToString();
                         if (!map.ContainsKey(area)) map[area] = new List<string>();
                         map[area].Add(issue);
                     }
                 }
             }
-
-            if (map.Count == 0)
-                return IssueCatalog.GetIssueMap(); // seed fallback
-
             return map;
         }
 
-        /// <summary>Issues (Area→Issue) haritasını kaydeder (tam yenileme).</summary>
-        public static void SaveIssueMap(Dictionary<string, List<string>> map)
-        {
-            if (map == null) throw new ArgumentNullException(nameof(map));
+        // === Silme kısıtları için yardımcı kontroller ===
+        public static bool HasTicketsForArea(string area)
+            => Convert.ToInt32(ExecuteScalar(new SQLiteConnection(connectionString),
+                $"SELECT COUNT(*) FROM {TICKETS_TABLE} WHERE Area=@a", ("@a", area))) > 0;
 
+        public static bool HasTicketsForSubArea(string area, string subArea)
+            => Convert.ToInt32(ExecuteScalar(new SQLiteConnection(connectionString),
+                $"SELECT COUNT(*) FROM {TICKETS_TABLE} WHERE Area=@a AND SubArea=@s",
+                ("@a", area), ("@s", subArea))) > 0;
+
+        public static bool HasTicketsForIssue(string issue)
+            => Convert.ToInt32(ExecuteScalar(new SQLiteConnection(connectionString),
+                $"SELECT COUNT(*) FROM {TICKETS_TABLE} WHERE Issue=@i", ("@i", issue))) > 0;
+
+        // =========================================================
+        // ====================  ARŞİV / TEMİZLİK  =================
+        // =========================================================
+
+        /// <summary>Durumu 'çözüldü' olan ticket’ları siler.</summary>
+        public static void DeleteResolvedTickets()
+        {
             using (var conn = new SQLiteConnection(connectionString))
             {
                 conn.Open();
-                using (var tx = conn.BeginTransaction())
+                using (var cmd = new SQLiteCommand(
+                    $"DELETE FROM {TICKETS_TABLE} WHERE Status=@s", conn))
                 {
-                    try
-                    {
-                        SaveIssueMapInternal(conn, map);
-                        tx.Commit();
-                    }
-                    catch (Exception ex)
-                    {
-                        tx.Rollback();
-                        Logger.Log(ex);
-                        throw;
-                    }
+                    cmd.Parameters.AddWithValue("@s", "çözüldü");
+                    cmd.ExecuteNonQuery();
                 }
             }
         }
 
-        private static void SaveIssueMapInternal(SQLiteConnection conn, Dictionary<string, List<string>> map)
+        // =========================================================
+        // =====================  ORTAK YARDIMCI  ==================
+        // =========================================================
+
+        /// <summary>Ticket doğrulama.</summary>
+        private static void ValidateTicket(Ticket ticket)
         {
-            ExecuteNonQuery(conn, $"DELETE FROM {ISSUES_TABLE};");
+            var errors = new List<string>();
+            if (string.IsNullOrWhiteSpace(ticket.Area)) errors.Add("Alan boş olamaz");
+            if (string.IsNullOrWhiteSpace(ticket.Issue)) errors.Add("Sorun tipi boş olamaz");
+            if (string.IsNullOrWhiteSpace(ticket.Description)) errors.Add("Açıklama boş olamaz");
+            if ((ticket.Description?.Length ?? 0) > 300) errors.Add("Açıklama 300+ karakter");
+            if (string.IsNullOrWhiteSpace(ticket.FirstName)) errors.Add("Ad boş olamaz");
+            if (string.IsNullOrWhiteSpace(ticket.LastName)) errors.Add("Soyad boş olamaz");
+            if (string.IsNullOrWhiteSpace(ticket.PhoneNumber)) errors.Add("Telefon boş olamaz");
 
-            string insert = $@"INSERT INTO {ISSUES_TABLE}(AreaName, IssueName) VALUES(@a,@i);";
-
-            foreach (var area in map.Keys)
-            {
-                foreach (var issue in map[area]?.Distinct(StringComparer.OrdinalIgnoreCase) ?? Enumerable.Empty<string>())
-                {
-                    using (var cmd = new SQLiteCommand(insert, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@a", area);
-                        cmd.Parameters.AddWithValue("@i", issue);
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-            }
+            if (errors.Count > 0)
+                throw new ArgumentException("Ticket verileri geçersiz: " + string.Join(", ", errors));
         }
 
-        #endregion
-
-        #region Low-level Helpers
-
-        private static void ExecuteNonQuery(SQLiteConnection conn, string sql)
+        /// <summary>SELECT sorgu çalıştırır ve Ticket listesine map’ler.</summary>
+        private static List<Ticket> ExecuteTicketQuery(string query, params (string name, object value)[] parameters)
         {
-            using (var cmd = new SQLiteCommand(sql, conn))
-                cmd.ExecuteNonQuery();
-        }
-
-        private static void ExecuteNonQuery(string cs, string sql)
-        {
-            using (var conn = new SQLiteConnection(cs))
+            var result = new List<Ticket>();
+            using (var conn = new SQLiteConnection(connectionString))
             {
                 conn.Open();
-                ExecuteNonQuery(conn, sql);
+                using (var cmd = new SQLiteCommand(query, conn))
+                {
+                    foreach (var p in parameters) cmd.Parameters.AddWithValue(p.name, p.value);
+                    using (var r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                        {
+                            result.Add(new Ticket
+                            {
+                                Id = Convert.ToInt32(r["Id"]),
+                                Area = r["Area"].ToString(),
+                                SubArea = r["SubArea"] == DBNull.Value ? "" : r["SubArea"].ToString(),
+                                Issue = r["Issue"].ToString(),
+                                Description = r["Description"].ToString(),
+                                FirstName = r["FirstName"].ToString(),
+                                LastName = r["LastName"].ToString(),
+                                PhoneNumber = r["PhoneNumber"].ToString(),
+                                CreatedAt = Convert.ToDateTime(r["CreatedAt"]),
+                                IsResolved = Convert.ToBoolean(r["IsResolved"]),
+                                Status = r["Status"]?.ToString() ?? "beklemede",
+                                AssignedTo = r["AssignedTo"] == DBNull.Value ? null : r["AssignedTo"].ToString(),
+                                RejectionReason = r["RejectionReason"] == DBNull.Value ? null : r["RejectionReason"].ToString(),
+                                UpdatedAt = r["UpdatedAt"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(r["UpdatedAt"]),
+                                ResolvedAt = r["ResolvedAt"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(r["ResolvedAt"])
+                            });
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
+        /// <summary>Tek değer döndüren sorgu çalıştırır.</summary>
+        private static object ExecuteScalar(SQLiteConnection externalConn, string query, params (string name, object value)[] parameters)
+        {
+            // Bağlantı dışarıdan verilmediyse kendimiz açar kaparız
+            bool own = externalConn.State != System.Data.ConnectionState.Open;
+            if (own) externalConn.Open();
+
+            try
+            {
+                using (var cmd = new SQLiteCommand(query, externalConn))
+                {
+                    foreach (var p in parameters) cmd.Parameters.AddWithValue(p.name, p.value);
+                    return cmd.ExecuteScalar();
+                }
+            }
+            finally
+            {
+                if (own) externalConn.Close();
             }
         }
 
-        private static object ExecuteScalar(SQLiteConnection conn, string sql)
+        /// <summary>INSERT/UPDATE/DELETE için yardımcı.</summary>
+        private static int ExecuteNonQuery(SQLiteConnection conn, string query, params (string name, object value)[] parameters)
         {
-            using (var cmd = new SQLiteCommand(sql, conn))
-                return cmd.ExecuteScalar();
+            using (var cmd = new SQLiteCommand(query, conn))
+            {
+                foreach (var p in parameters) cmd.Parameters.AddWithValue(p.name, p.value);
+                return cmd.ExecuteNonQuery();
+            }
         }
 
-        /// <summary>Tablo kolon adlarını set olarak döndürür.</summary>
-        private static HashSet<string> GetTableColumns(SQLiteConnection conn, string tableName)
+        /// <summary>Bir tablonun kolon adlarını döndürür.</summary>
+        private static List<string> GetTableColumns(SQLiteConnection conn, string table)
         {
-            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            using (var cmd = new SQLiteCommand($"PRAGMA table_info({tableName});", conn))
+            var cols = new List<string>();
+            using (var cmd = new SQLiteCommand($"PRAGMA table_info({table});", conn))
             using (var r = cmd.ExecuteReader())
-                while (r.Read())
-                    set.Add(Convert.ToString(r["name"]));
-            return set;
+                while (r.Read()) cols.Add(r["name"].ToString());
+            return cols;
         }
-
-        #endregion
     }
 }

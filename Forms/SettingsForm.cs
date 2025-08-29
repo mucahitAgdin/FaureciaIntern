@@ -1,694 +1,417 @@
-﻿using System;
+﻿// TicketApp/Forms/SettingsForm.cs
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using TicketApp.Helpers;
+using TicketApp.Helpers;     // DatabaseHelper, AreaCatalog, IssueCatalog, Logger  // refs: :contentReference[oaicite:7]{index=7} :contentReference[oaicite:8]{index=8} :contentReference[oaicite:9]{index=9} :contentReference[oaicite:10]{index=10}
+using TicketApp.Models;      // Ticket
 
 namespace TicketApp.Forms
 {
+    /// <summary>
+    /// Sistem ayarları: Alan, Alt Alan, Hat (Line) ve Sorun tiplerinin yönetimi.
+    /// Zincir: Alan -> Alt Alan -> Hat -> Sorun
+    /// </summary>
     public partial class SettingsForm : Form
     {
+        // --- Bellek içi haritalar ---
+        // Alan -> Alt Alan listesi
         private Dictionary<string, List<string>> areaSubAreaMap;
-        private Dictionary<string, List<string>> issueMap;
-        private bool hasChanges = false;
 
-        // UI Controls
+        // Alt Alan -> Hat listesi (YENİ)
+        private Dictionary<string, List<string>> subAreaLineMap;
+
+        // Alan -> Sorun listesi
+        private Dictionary<string, List<string>> issueMap;
+
+        private bool hasChanges = false; // Kaydet uyarısı için
+
+        // --- UI Bileşenleri (Designer'da iskelet oluşturuluyor; detaylar burada) ---
         private TabControl tabControl;
         private TabPage tabAreas;
         private TabPage tabIssues;
 
-        // Alan yönetimi kontrolleri
+        // Alan yönetimi
         private ListBox listBoxAreas;
         private TextBox textBoxNewArea;
         private Button btnAddArea;
         private Button btnDeleteArea;
+
         private Label lblSelectedArea;
         private ListBox listBoxSubAreas;
         private TextBox textBoxNewSubArea;
         private Button btnAddSubArea;
         private Button btnDeleteSubArea;
 
-        // Sorun yönetimi kontrolleri
+        // YENİ: Hat yönetimi
+        private Label lblSelectedSubArea;
+        private ListBox listBoxLines;
+        private TextBox textBoxNewLine;
+        private Button btnAddLine;
+        private Button btnDeleteLine;
+
+        // Sorun yönetimi
         private ComboBox comboBoxIssueArea;
         private ListBox listBoxIssues;
         private TextBox textBoxNewIssue;
         private Button btnAddIssue;
         private Button btnDeleteIssue;
 
-        // Genel kontroller
+        // Genel
         private Button btnSave;
         private Button btnCancel;
         private Button btnReset;
 
         public SettingsForm()
         {
-            InitializeComponent();
+            InitializeComponent(); // Designer: tabControl oluşturur ve Create* metodlarını çağırır  // refs: :contentReference[oaicite:11]{index=11} :contentReference[oaicite:12]{index=12}
             LoadData();
         }
 
         private void SettingsForm_Load(object sender, EventArgs e)
         {
-            // Form yüklendiğinde yapılacak işlemler
             LoadData();
         }
 
-
-        private void CreateAreaManagementTab()
-        {
-            tabAreas = new TabPage("Alan Yönetimi");
-            tabAreas.BackColor = Color.White;
-            tabAreas.Padding = new Padding(10);
-
-            // Ana alanlar grubu
-            var groupBoxAreas = new GroupBox();
-            groupBoxAreas.Text = "Ana Alanlar (UAP/FES)";
-            groupBoxAreas.Location = new Point(10, 10);
-            groupBoxAreas.Size = new Size(340, 300);
-            groupBoxAreas.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-
-            listBoxAreas = new ListBox();
-            listBoxAreas.Location = new Point(10, 25);
-            listBoxAreas.Size = new Size(320, 180);
-            listBoxAreas.Font = new Font("Segoe UI", 9F);
-            listBoxAreas.SelectedIndexChanged += ListBoxAreas_SelectedIndexChanged;
-
-            textBoxNewArea = new TextBox();
-            textBoxNewArea.Location = new Point(10, 215);
-            textBoxNewArea.Size = new Size(200, 23);
-            textBoxNewArea.Font = new Font("Segoe UI", 9F);
-
-            // PlaceholderText özelliği .NET Framework'te mevcut olmayabilir
-            // Bu durumda sadece kaldırabilirsiniz veya alternatif kullanabilirsiniz
-            try
-            {
-                textBoxNewArea.GetType().GetProperty("PlaceholderText")?.SetValue(textBoxNewArea, "Yeni alan adı (örn: UAP-5)");
-            }
-            catch
-            {
-                // PlaceholderText desteklenmiyorsa, varsayılan metin kullan
-                textBoxNewArea.Text = "Yeni alan adı (örn: UAP-5)";
-                textBoxNewArea.ForeColor = Color.Gray;
-                textBoxNewArea.Enter += (s, e) => {
-                    if (textBoxNewArea.Text == "Yeni alan adı (örn: UAP-5)")
-                    {
-                        textBoxNewArea.Text = "";
-                        textBoxNewArea.ForeColor = Color.Black;
-                    }
-                };
-                textBoxNewArea.Leave += (s, e) => {
-                    if (string.IsNullOrEmpty(textBoxNewArea.Text))
-                    {
-                        textBoxNewArea.Text = "Yeni alan adı (örn: UAP-5)";
-                        textBoxNewArea.ForeColor = Color.Gray;
-                    }
-                };
-            }
-
-            btnAddArea = new Button();
-            btnAddArea.Text = "Ekle";
-            btnAddArea.Location = new Point(220, 215);
-            btnAddArea.Size = new Size(50, 25);
-            btnAddArea.BackColor = Color.FromArgb(46, 204, 113);
-            btnAddArea.ForeColor = Color.White;
-            btnAddArea.FlatStyle = FlatStyle.Flat;
-            btnAddArea.Font = new Font("Segoe UI", 9F);
-            btnAddArea.Click += BtnAddArea_Click;
-
-            btnDeleteArea = new Button();
-            btnDeleteArea.Text = "Sil";
-            btnDeleteArea.Location = new Point(280, 215);
-            btnDeleteArea.Size = new Size(50, 25);
-            btnDeleteArea.BackColor = Color.FromArgb(231, 76, 60);
-            btnDeleteArea.ForeColor = Color.White;
-            btnDeleteArea.FlatStyle = FlatStyle.Flat;
-            btnDeleteArea.Font = new Font("Segoe UI", 9F);
-            btnDeleteArea.Click += BtnDeleteArea_Click;
-
-            var lblWarning = new Label();
-            lblWarning.Text = "⚠️ Mevcut ticket'ları olan alanlar silinemez";
-            lblWarning.Location = new Point(10, 250);
-            lblWarning.Size = new Size(320, 20);
-            lblWarning.ForeColor = Color.FromArgb(230, 126, 34);
-            lblWarning.Font = new Font("Segoe UI", 8F);
-
-            groupBoxAreas.Controls.AddRange(new Control[] {
-                listBoxAreas, textBoxNewArea, btnAddArea, btnDeleteArea, lblWarning
-            });
-
-            // Alt alanlar grubu
-            var groupBoxSubAreas = new GroupBox();
-            groupBoxSubAreas.Text = "Alt Alanlar";
-            groupBoxSubAreas.Location = new Point(360, 10);
-            groupBoxSubAreas.Size = new Size(340, 300);
-            groupBoxSubAreas.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-
-            lblSelectedArea = new Label();
-            lblSelectedArea.Text = "Seçilen Alan: Yok";
-            lblSelectedArea.Location = new Point(10, 25);
-            lblSelectedArea.Size = new Size(320, 20);
-            lblSelectedArea.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblSelectedArea.ForeColor = Color.FromArgb(52, 73, 94);
-
-            listBoxSubAreas = new ListBox();
-            listBoxSubAreas.Location = new Point(10, 50);
-            listBoxSubAreas.Size = new Size(320, 155);
-            listBoxSubAreas.Font = new Font("Segoe UI", 9F);
-            listBoxSubAreas.Enabled = false;
-
-            textBoxNewSubArea = new TextBox();
-            textBoxNewSubArea.Location = new Point(10, 215);
-            textBoxNewSubArea.Size = new Size(200, 23);
-            textBoxNewSubArea.Font = new Font("Segoe UI", 9F);
-            textBoxNewSubArea.Enabled = false;
-
-            btnAddSubArea = new Button();
-            btnAddSubArea.Text = "Ekle";
-            btnAddSubArea.Location = new Point(220, 215);
-            btnAddSubArea.Size = new Size(50, 25);
-            btnAddSubArea.BackColor = Color.FromArgb(46, 204, 113);
-            btnAddSubArea.ForeColor = Color.White;
-            btnAddSubArea.FlatStyle = FlatStyle.Flat;
-            btnAddSubArea.Font = new Font("Segoe UI", 9F);
-            btnAddSubArea.Enabled = false;
-            btnAddSubArea.Click += BtnAddSubArea_Click;
-
-            btnDeleteSubArea = new Button();
-            btnDeleteSubArea.Text = "Sil";
-            btnDeleteSubArea.Location = new Point(280, 215);
-            btnDeleteSubArea.Size = new Size(50, 25);
-            btnDeleteSubArea.BackColor = Color.FromArgb(231, 76, 60);
-            btnDeleteSubArea.ForeColor = Color.White;
-            btnDeleteSubArea.FlatStyle = FlatStyle.Flat;
-            btnDeleteSubArea.Font = new Font("Segoe UI", 9F);
-            btnDeleteSubArea.Enabled = false;
-            btnDeleteSubArea.Click += BtnDeleteSubArea_Click;
-
-            groupBoxSubAreas.Controls.AddRange(new Control[] {
-                lblSelectedArea, listBoxSubAreas, textBoxNewSubArea, btnAddSubArea, btnDeleteSubArea
-            });
-
-            // Kullanım kılavuzu
-            var lblGuide = new Label();
-            lblGuide.Text = "📋 Kullanım Kılavuzu:\n" +
-                          "• Ana alanlar (UAP-1, UAP-2, FES vb.) sisteminizin temel bölümleridir\n" +
-                          "• Her ana alana ait alt alanlar tanımlayabilirsiniz\n" +
-                          "• Değişiklikleri kaydetmek için 'Kaydet' butonunu kullanın";
-            lblGuide.Location = new Point(10, 320);
-            lblGuide.Size = new Size(700, 60);
-            lblGuide.Font = new Font("Segoe UI", 9F);
-            lblGuide.ForeColor = Color.FromArgb(127, 140, 141);
-
-            tabAreas.Controls.AddRange(new Control[] { groupBoxAreas, groupBoxSubAreas, lblGuide });
-            tabControl.TabPages.Add(tabAreas);
-        }
-
-        private void CreateIssueManagementTab()
-        {
-            tabIssues = new TabPage("Sorun Yönetimi");
-            tabIssues.BackColor = Color.White;
-            tabIssues.Padding = new Padding(10);
-
-            // Alan seçimi
-            var lblSelectArea = new Label();
-            lblSelectArea.Text = "Sorun eklemek istediğiniz alanı seçin:";
-            lblSelectArea.Location = new Point(10, 20);
-            lblSelectArea.Size = new Size(300, 20);
-            lblSelectArea.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-
-            comboBoxIssueArea = new ComboBox();
-            comboBoxIssueArea.Location = new Point(10, 45);
-            comboBoxIssueArea.Size = new Size(200, 23);
-            comboBoxIssueArea.DropDownStyle = ComboBoxStyle.DropDownList;
-            comboBoxIssueArea.Font = new Font("Segoe UI", 9F);
-            comboBoxIssueArea.SelectedIndexChanged += ComboBoxIssueArea_SelectedIndexChanged;
-
-            // Sorunlar grubu
-            var groupBoxIssues = new GroupBox();
-            groupBoxIssues.Text = "Sorunlar";
-            groupBoxIssues.Location = new Point(10, 80);
-            groupBoxIssues.Size = new Size(700, 300);
-            groupBoxIssues.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-
-            listBoxIssues = new ListBox();
-            listBoxIssues.Location = new Point(10, 25);
-            listBoxIssues.Size = new Size(680, 180);
-            listBoxIssues.Font = new Font("Segoe UI", 9F);
-            listBoxIssues.Enabled = false;
-
-            textBoxNewIssue = new TextBox();
-            textBoxNewIssue.Location = new Point(10, 215);
-            textBoxNewIssue.Size = new Size(500, 23);
-            textBoxNewIssue.Font = new Font("Segoe UI", 9F);
-            textBoxNewIssue.Enabled = false;
-
-            btnAddIssue = new Button();
-            btnAddIssue.Text = "Sorun Ekle";
-            btnAddIssue.Location = new Point(520, 215);
-            btnAddIssue.Size = new Size(80, 25);
-            btnAddIssue.BackColor = Color.FromArgb(46, 204, 113);
-            btnAddIssue.ForeColor = Color.White;
-            btnAddIssue.FlatStyle = FlatStyle.Flat;
-            btnAddIssue.Font = new Font("Segoe UI", 9F);
-            btnAddIssue.Enabled = false;
-            btnAddIssue.Click += BtnAddIssue_Click;
-
-            btnDeleteIssue = new Button();
-            btnDeleteIssue.Text = "Sil";
-            btnDeleteIssue.Location = new Point(610, 215);
-            btnDeleteIssue.Size = new Size(80, 25);
-            btnDeleteIssue.BackColor = Color.FromArgb(231, 76, 60);
-            btnDeleteIssue.ForeColor = Color.White;
-            btnDeleteIssue.FlatStyle = FlatStyle.Flat;
-            btnDeleteIssue.Font = new Font("Segoe UI", 9F);
-            btnDeleteIssue.Enabled = false;
-            btnDeleteIssue.Click += BtnDeleteIssue_Click;
-
-            var lblIssueInfo = new Label();
-            lblIssueInfo.Text = "ℹ️ GENEL kategorisindeki sorunlar tüm alanlarda görünür";
-            lblIssueInfo.Location = new Point(10, 250);
-            lblIssueInfo.Size = new Size(680, 20);
-            lblIssueInfo.Font = new Font("Segoe UI", 8F);
-            lblIssueInfo.ForeColor = Color.FromArgb(52, 152, 219);
-
-            groupBoxIssues.Controls.AddRange(new Control[] {
-                listBoxIssues, textBoxNewIssue, btnAddIssue, btnDeleteIssue, lblIssueInfo
-            });
-
-            // Kullanım kılavuzu
-            var lblIssueGuide = new Label();
-            lblIssueGuide.Text = "📋 Sorun Yönetimi:\n" +
-                              "• Her alan için özel sorun tipleri tanımlayabilirsiniz\n" +
-                              "• GENEL kategorisindeki sorunlar tüm alanlarda görünür\n" +
-                              "• Mevcut ticket'ları olan sorunlar silinemez";
-            lblIssueGuide.Location = new Point(10, 390);
-            lblIssueGuide.Size = new Size(700, 60);
-            lblIssueGuide.Font = new Font("Segoe UI", 9F);
-            lblIssueGuide.ForeColor = Color.FromArgb(127, 140, 141);
-
-            tabIssues.Controls.AddRange(new Control[] {
-                lblSelectArea, comboBoxIssueArea, groupBoxIssues, lblIssueGuide
-            });
-            tabControl.TabPages.Add(tabIssues);
-        }
-
-        private void CreateGeneralButtons()
-        {
-            btnSave = new Button();
-            btnSave.Text = "💾 Kaydet";
-            btnSave.Location = new Point(520, 520);
-            btnSave.Size = new Size(80, 30);
-            btnSave.BackColor = Color.FromArgb(46, 204, 113);
-            btnSave.ForeColor = Color.White;
-            btnSave.FlatStyle = FlatStyle.Flat;
-            btnSave.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            btnSave.Click += BtnSave_Click;
-
-            btnReset = new Button();
-            btnReset.Text = "🔄 Sıfırla";
-            btnReset.Location = new Point(610, 520);
-            btnReset.Size = new Size(80, 30);
-            btnReset.BackColor = Color.FromArgb(230, 126, 34);
-            btnReset.ForeColor = Color.White;
-            btnReset.FlatStyle = FlatStyle.Flat;
-            btnReset.Font = new Font("Segoe UI", 9F);
-            btnReset.Click += BtnReset_Click;
-
-            btnCancel = new Button();
-            btnCancel.Text = "❌ İptal";
-            btnCancel.Location = new Point(700, 520);
-            btnCancel.Size = new Size(80, 30);
-            btnCancel.BackColor = Color.FromArgb(231, 76, 60);
-            btnCancel.ForeColor = Color.White;
-            btnCancel.FlatStyle = FlatStyle.Flat;
-            btnCancel.Font = new Font("Segoe UI", 9F);
-            btnCancel.Click += BtnCancel_Click;
-
-            this.Controls.AddRange(new Control[] { btnSave, btnReset, btnCancel });
-        }
-
+        /// <summary>
+        /// DB'den tüm sözlükleri çeker, yoksa kataloglardan seed eder ve UI'yı tazeler.
+        /// </summary>
         private void LoadData()
         {
             try
             {
-                // Veritabanından mevcut alan ve sorun verilerini yükle
+                // DB hazır (Program.cs'de InitializeDatabase çağrılıyor)  // ref: :contentReference[oaicite:13]{index=13}
+
+                // Alan–Alt Alan
                 areaSubAreaMap = DatabaseHelper.GetAreaSubAreaMap();
-                issueMap = DatabaseHelper.GetIssueMap();
-
-                // Eğer veriler yoksa varsayılan değerleri kullan
                 if (areaSubAreaMap == null || areaSubAreaMap.Count == 0)
-                {
-                    areaSubAreaMap = AreaCatalog.GetAreaSubAreaMap();
-                }
+                    areaSubAreaMap = AreaCatalog.GetAreaSubAreaMap();  // seed fallback  // ref: :contentReference[oaicite:14]{index=14}
 
+                // Alt Alan–Hat (Line)
+                subAreaLineMap = DatabaseHelper.GetSubAreaLineMap();  // YENİ  // ref: :contentReference[oaicite:15]{index=15}
+                if (subAreaLineMap == null) subAreaLineMap = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+
+                // Sorunlar
+                issueMap = DatabaseHelper.GetIssueMap();
                 if (issueMap == null || issueMap.Count == 0)
-                {
-                    issueMap = IssueCatalog.GetIssueMap();
-                }
+                    issueMap = IssueCatalog.GetIssueMap();             // seed fallback  // ref: :contentReference[oaicite:16]{index=16}
 
                 RefreshUI();
+                hasChanges = false;
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
                 MessageBox.Show("Veriler yüklenirken hata oluştu. Lütfen logları kontrol edin.", "Hata",
-                              MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
+        /// <summary>Temel UI'ları yeniden doldurur.</summary>
         private void RefreshUI()
         {
+            // Alan listesi
             if (listBoxAreas != null)
             {
-                // Alan listesini güncelle
                 listBoxAreas.Items.Clear();
-                foreach (var area in areaSubAreaMap.Keys)
-                {
+                foreach (var area in areaSubAreaMap.Keys.OrderBy(x => x))
                     listBoxAreas.Items.Add(area);
-                }
             }
 
+            // Sorun alanları
             if (comboBoxIssueArea != null)
             {
-                // Sorun alanları combobox'ını güncelle
                 comboBoxIssueArea.Items.Clear();
-                foreach (var area in issueMap.Keys)
-                {
+                foreach (var area in issueMap.Keys.OrderBy(x => x))
                     comboBoxIssueArea.Items.Add(area);
-                }
             }
+
+            // Seçime bağlı alanlar eventlerde dolduruluyor
         }
+
+        // =========================================================================
+        // ===============  Alan & Alt Alan & Hat (Line) Yönetimi  =================
+        // =========================================================================
 
         private void ListBoxAreas_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (listBoxAreas.SelectedItem != null)
-            {
-                string selectedArea = listBoxAreas.SelectedItem.ToString();
-                lblSelectedArea.Text = $"Seçilen Alan: {selectedArea}";
+            if (listBoxAreas.SelectedItem == null) return;
 
-                // Alt alanları yükle
-                listBoxSubAreas.Items.Clear();
-                if (areaSubAreaMap.ContainsKey(selectedArea))
-                {
-                    foreach (var subArea in areaSubAreaMap[selectedArea])
-                    {
-                        listBoxSubAreas.Items.Add(subArea);
-                    }
-                }
+            string selectedArea = listBoxAreas.SelectedItem.ToString();
+            lblSelectedArea.Text = $"Seçilen Alan: {selectedArea}";
 
-                // Alt alan kontrollerini aktif et
-                listBoxSubAreas.Enabled = true;
-                textBoxNewSubArea.Enabled = true;
-                btnAddSubArea.Enabled = true;
-                btnDeleteSubArea.Enabled = true;
-            }
+            // Alt alanları doldur
+            listBoxSubAreas.Items.Clear();
+            if (areaSubAreaMap.TryGetValue(selectedArea, out var subs) && subs != null)
+                foreach (var sub in subs.OrderBy(x => x)) listBoxSubAreas.Items.Add(sub);
+
+            listBoxSubAreas.Enabled = true;
+            textBoxNewSubArea.Enabled = true;
+            btnAddSubArea.Enabled = true;
+            btnDeleteSubArea.Enabled = true;
+
+            // Hat bölümünü temizle
+            listBoxLines.Items.Clear();
+            lblSelectedSubArea.Text = "Seçilen Alt Alan: Yok";
+            textBoxNewLine.Enabled = false;
+            btnAddLine.Enabled = false;
+            btnDeleteLine.Enabled = false;
         }
 
-        private void ComboBoxIssueArea_SelectedIndexChanged(object sender, EventArgs e)
+        private void ListBoxSubAreas_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (comboBoxIssueArea.SelectedItem != null)
-            {
-                string selectedArea = comboBoxIssueArea.SelectedItem.ToString();
+            if (listBoxSubAreas.SelectedItem == null) return;
 
-                // Sorunları yükle
-                listBoxIssues.Items.Clear();
-                if (issueMap.ContainsKey(selectedArea))
-                {
-                    foreach (var issue in issueMap[selectedArea])
-                    {
-                        listBoxIssues.Items.Add(issue);
-                    }
-                }
+            var sub = listBoxSubAreas.SelectedItem.ToString();
+            lblSelectedSubArea.Text = $"Seçilen Alt Alan: {sub}";
 
-                // Sorun kontrollerini aktif et
-                listBoxIssues.Enabled = true;
-                textBoxNewIssue.Enabled = true;
-                btnAddIssue.Enabled = true;
-                btnDeleteIssue.Enabled = true;
-            }
+            // Hatları yükle
+            listBoxLines.Items.Clear();
+            if (subAreaLineMap.TryGetValue(sub, out var lines) && lines != null)
+                foreach (var line in lines.OrderBy(x => x)) listBoxLines.Items.Add(line);
+
+            textBoxNewLine.Enabled = true;
+            btnAddLine.Enabled = true;
+            btnDeleteLine.Enabled = true;
         }
 
         private void BtnAddArea_Click(object sender, EventArgs e)
         {
-            string newArea = textBoxNewArea.Text.Trim();
-
-            // Placeholder text kontrolü
-            if (string.IsNullOrEmpty(newArea) || newArea == "Yeni alan adı (örn: UAP-5)")
+            var newArea = (textBoxNewArea.Text ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(newArea) || areaSubAreaMap.ContainsKey(newArea))
             {
-                MessageBox.Show("Lütfen alan adını girin.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (areaSubAreaMap.ContainsKey(newArea))
-            {
-                MessageBox.Show("Bu alan zaten mevcut.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Geçerli ve benzersiz bir Alan giriniz.", "Uyarı");
                 return;
             }
 
             areaSubAreaMap[newArea] = new List<string>();
-            issueMap[newArea] = new List<string>();
-
-            textBoxNewArea.Clear();
+            if (!issueMap.ContainsKey(newArea)) issueMap[newArea] = new List<string>();
             hasChanges = true;
             RefreshUI();
-
-            MessageBox.Show($"'{newArea}' alanı başarıyla eklendi.", "Başarılı",
-                          MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show($"'{newArea}' alanı eklendi.");
         }
 
         private void BtnDeleteArea_Click(object sender, EventArgs e)
         {
-            if (listBoxAreas.SelectedItem == null)
+            if (listBoxAreas.SelectedItem == null) return;
+            string area = listBoxAreas.SelectedItem.ToString();
+
+            // Bu alana bağlı ticket var mı? (GetAllTickets ile kontrol)  // ref: :contentReference[oaicite:17]{index=17}
+            var hasTicket = DatabaseHelper.GetAllTickets().Any(t => string.Equals(t.Area, area, StringComparison.OrdinalIgnoreCase));
+            if (hasTicket)
             {
-                MessageBox.Show("Lütfen silinecek alanı seçin.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Bu alana bağlı mevcut talepler var. Silme işlemi engellendi.", "Uyarı");
                 return;
             }
 
-            string selectedArea = listBoxAreas.SelectedItem.ToString();
+            // Sil
+            areaSubAreaMap.Remove(area);
+            issueMap.Remove(area);
+            // İlgili alt alanların hatlarını da temizleyelim
+            foreach (var sub in subAreaLineMap.Keys.Where(k => areaSubAreaMap.ContainsKey(area) && areaSubAreaMap[area].Contains(k)).ToList())
+                subAreaLineMap.Remove(sub);
 
-            // Mevcut ticket kontrolü
-            if (DatabaseHelper.HasTicketsForArea(selectedArea))
-            {
-                MessageBox.Show("Bu alana ait mevcut ticket'lar bulunduğu için silinemez.",
-                              "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            var result = MessageBox.Show($"'{selectedArea}' alanını silmek istediğinizden emin misiniz?\n" +
-                                       "Bu işlem geri alınamaz.", "Onay",
-                                       MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-            if (result == DialogResult.Yes)
-            {
-                areaSubAreaMap.Remove(selectedArea);
-                issueMap.Remove(selectedArea);
-                hasChanges = true;
-                RefreshUI();
-
-                // Alt alan kontrollerini devre dışı bırak
-                listBoxSubAreas.Items.Clear();
-                listBoxSubAreas.Enabled = false;
-                textBoxNewSubArea.Enabled = false;
-                btnAddSubArea.Enabled = false;
-                btnDeleteSubArea.Enabled = false;
-                lblSelectedArea.Text = "Seçilen Alan: Yok";
-
-                MessageBox.Show($"'{selectedArea}' alanı başarıyla silindi.", "Başarılı",
-                              MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
+            hasChanges = true;
+            RefreshUI();
+            listBoxSubAreas.Items.Clear();
+            listBoxLines.Items.Clear();
+            MessageBox.Show($"'{area}' alanı silindi.");
         }
 
         private void BtnAddSubArea_Click(object sender, EventArgs e)
         {
-            if (listBoxAreas.SelectedItem == null)
+            if (listBoxAreas.SelectedItem == null) { MessageBox.Show("Önce bir Alan seçiniz."); return; }
+            string area = listBoxAreas.SelectedItem.ToString();
+
+            var newSub = (textBoxNewSubArea.Text ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(newSub)) { MessageBox.Show("Geçerli bir Alt Alan giriniz."); return; }
+
+            var subs = areaSubAreaMap[area];
+            if (subs.Contains(newSub, StringComparer.OrdinalIgnoreCase))
             {
-                MessageBox.Show("Lütfen önce bir alan seçin.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Bu alt alan zaten mevcut.", "Uyarı");
                 return;
             }
 
-            string newSubArea = textBoxNewSubArea.Text.Trim();
-            if (string.IsNullOrEmpty(newSubArea))
-            {
-                MessageBox.Show("Lütfen alt alan adını girin.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            string selectedArea = listBoxAreas.SelectedItem.ToString();
-
-            if (areaSubAreaMap[selectedArea].Contains(newSubArea))
-            {
-                MessageBox.Show("Bu alt alan zaten mevcut.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            areaSubAreaMap[selectedArea].Add(newSubArea);
-            listBoxSubAreas.Items.Add(newSubArea);
-            textBoxNewSubArea.Clear();
+            subs.Add(newSub);
+            if (!subAreaLineMap.ContainsKey(newSub)) subAreaLineMap[newSub] = new List<string>();
             hasChanges = true;
 
-            MessageBox.Show($"'{newSubArea}' alt alanı başarıyla eklendi.", "Başarılı",
-                          MessageBoxButtons.OK, MessageBoxIcon.Information);
+            // UI güncelle
+            listBoxSubAreas.Items.Add(newSub);
+            textBoxNewSubArea.Clear();
         }
 
         private void BtnDeleteSubArea_Click(object sender, EventArgs e)
         {
-            if (listBoxAreas.SelectedItem == null || listBoxSubAreas.SelectedItem == null)
+            if (listBoxAreas.SelectedItem == null || listBoxSubAreas.SelectedItem == null) return;
+            string area = listBoxAreas.SelectedItem.ToString();
+            string sub = listBoxSubAreas.SelectedItem.ToString();
+
+            // Bu alt alana bağlı ticket var mı?  // ref: :contentReference[oaicite:18]{index=18}
+            var hasTicket = DatabaseHelper.GetAllTickets().Any(t => string.Equals(t.SubArea, sub, StringComparison.OrdinalIgnoreCase));
+            if (hasTicket)
             {
-                MessageBox.Show("Lütfen silinecek alt alanı seçin.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Bu alt alana bağlı mevcut talepler var. Silme işlemi engellendi.", "Uyarı");
                 return;
             }
 
-            string selectedArea = listBoxAreas.SelectedItem.ToString();
-            string selectedSubArea = listBoxSubAreas.SelectedItem.ToString();
+            // Sil
+            areaSubAreaMap[area].RemoveAll(x => string.Equals(x, sub, StringComparison.OrdinalIgnoreCase));
+            if (subAreaLineMap.ContainsKey(sub)) subAreaLineMap.Remove(sub);
+            hasChanges = true;
 
-            // Mevcut ticket kontrolü
-            if (DatabaseHelper.HasTicketsForSubArea(selectedArea, selectedSubArea))
+            // UI güncelle
+            listBoxSubAreas.Items.Remove(sub);
+            listBoxLines.Items.Clear();
+            lblSelectedSubArea.Text = "Seçilen Alt Alan: Yok";
+        }
+
+        private void BtnAddLine_Click(object sender, EventArgs e)
+        {
+            if (listBoxSubAreas.SelectedItem == null) { MessageBox.Show("Önce bir Alt Alan seçiniz."); return; }
+            string sub = listBoxSubAreas.SelectedItem.ToString();
+
+            var newLine = (textBoxNewLine.Text ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(newLine)) { MessageBox.Show("Geçerli bir Hat adı giriniz."); return; }
+
+            if (!subAreaLineMap.ContainsKey(sub))
+                subAreaLineMap[sub] = new List<string>();
+
+            if (subAreaLineMap[sub].Contains(newLine, StringComparer.OrdinalIgnoreCase))
             {
-                MessageBox.Show("Bu alt alana ait mevcut ticket'lar bulunduğu için silinemez.",
-                              "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Bu hat zaten mevcut.", "Uyarı");
                 return;
             }
 
-            var result = MessageBox.Show($"'{selectedSubArea}' alt alanını silmek istediğinizden emin misiniz?",
-                                       "Onay", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            // DB'ye tek tek eklemek istersen:
+            DatabaseHelper.AddLine(sub, newLine); // pratik ekleme  // ref: :contentReference[oaicite:19]{index=19}
+            // Bellek içini güncelle
+            subAreaLineMap[sub].Add(newLine);
+            hasChanges = true;
 
-            if (result == DialogResult.Yes)
+            // UI
+            listBoxLines.Items.Add(newLine);
+            textBoxNewLine.Clear();
+        }
+
+        private void BtnDeleteLine_Click(object sender, EventArgs e)
+        {
+            if (listBoxSubAreas.SelectedItem == null || listBoxLines.SelectedItem == null) return;
+            string sub = listBoxSubAreas.SelectedItem.ToString();
+            string line = listBoxLines.SelectedItem.ToString();
+
+            // Ticket var mı? DatabaseHelper.HasTicketsForLine  // ref: :contentReference[oaicite:20]{index=20}
+            if (DatabaseHelper.HasTicketsForLine(line))
             {
-                areaSubAreaMap[selectedArea].Remove(selectedSubArea);
-                listBoxSubAreas.Items.Remove(selectedSubArea);
-                hasChanges = true;
-
-                MessageBox.Show($"'{selectedSubArea}' alt alanı başarıyla silindi.", "Başarılı",
-                              MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Bu hatta bağlı mevcut talepler var. Silme işlemi engellendi.", "Uyarı");
+                return;
             }
+
+            // DB'den sil
+            var ok = DatabaseHelper.DeleteLine(sub, line);    // bağlı ticket varsa false dönecek  // ref: :contentReference[oaicite:21]{index=21}
+            if (!ok)
+            {
+                MessageBox.Show("Hat silinemedi. Bağlı talepler olabilir.", "Uyarı");
+                return;
+            }
+
+            // Bellek içini güncelle
+            if (subAreaLineMap.ContainsKey(sub))
+                subAreaLineMap[sub].RemoveAll(x => string.Equals(x, line, StringComparison.OrdinalIgnoreCase));
+
+            hasChanges = true;
+
+            // UI
+            listBoxLines.Items.Remove(line);
+        }
+
+        // =========================================================================
+        // =========================  Sorun Yönetimi  ===============================
+        // =========================================================================
+
+        private void ComboBoxIssueArea_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            listBoxIssues.Items.Clear();
+            if (comboBoxIssueArea.SelectedItem == null) return;
+
+            string area = comboBoxIssueArea.SelectedItem.ToString();
+            if (!issueMap.ContainsKey(area)) issueMap[area] = new List<string>();
+
+            foreach (var issue in issueMap[area].OrderBy(x => x))
+                listBoxIssues.Items.Add(issue);
         }
 
         private void BtnAddIssue_Click(object sender, EventArgs e)
         {
-            if (comboBoxIssueArea.SelectedItem == null)
+            if (comboBoxIssueArea.SelectedItem == null) { MessageBox.Show("Önce bir Alan seçiniz."); return; }
+            string area = comboBoxIssueArea.SelectedItem.ToString();
+
+            var newIssue = (textBoxNewIssue.Text ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(newIssue)) { MessageBox.Show("Geçerli bir Sorun adı giriniz."); return; }
+
+            if (!issueMap.ContainsKey(area)) issueMap[area] = new List<string>();
+            if (issueMap[area].Contains(newIssue, StringComparer.OrdinalIgnoreCase))
             {
-                MessageBox.Show("Lütfen önce bir alan seçin.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Bu sorun tipi zaten mevcut.", "Uyarı");
                 return;
             }
 
-            string newIssue = textBoxNewIssue.Text.Trim();
-            if (string.IsNullOrEmpty(newIssue))
-            {
-                MessageBox.Show("Lütfen sorun tanımını girin.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            string selectedArea = comboBoxIssueArea.SelectedItem.ToString();
-
-            if (issueMap[selectedArea].Contains(newIssue))
-            {
-                MessageBox.Show("Bu sorun zaten mevcut.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            issueMap[selectedArea].Add(newIssue);
-            listBoxIssues.Items.Add(newIssue);
-            textBoxNewIssue.Clear();
+            issueMap[area].Add(newIssue);
             hasChanges = true;
 
-            MessageBox.Show($"'{newIssue}' sorunu başarıyla eklendi.", "Başarılı",
-                          MessageBoxButtons.OK, MessageBoxIcon.Information);
+            listBoxIssues.Items.Add(newIssue);
+            textBoxNewIssue.Clear();
         }
 
         private void BtnDeleteIssue_Click(object sender, EventArgs e)
         {
-            if (comboBoxIssueArea.SelectedItem == null || listBoxIssues.SelectedItem == null)
+            if (comboBoxIssueArea.SelectedItem == null || listBoxIssues.SelectedItem == null) return;
+            string area = comboBoxIssueArea.SelectedItem.ToString();
+            string issue = listBoxIssues.SelectedItem.ToString();
+
+            // Bu sorun başlığına sahip açık ticket olabilir; burada sadece uyarı yapıyoruz.
+            var hasTicket = DatabaseHelper.GetAllTickets().Any(t =>
+                string.Equals(t.Area, area, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(t.Issue, issue, StringComparison.OrdinalIgnoreCase));
+            if (hasTicket)
             {
-                MessageBox.Show("Lütfen silinecek sorunu seçin.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                var res = MessageBox.Show("Bu sorun tipine bağlı mevcut talepler var. Yine de kaldırmak istiyor musunuz?",
+                    "Uyarı", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (res != DialogResult.Yes) return;
             }
 
-            string selectedArea = comboBoxIssueArea.SelectedItem.ToString();
-            string selectedIssue = listBoxIssues.SelectedItem.ToString();
+            issueMap[area].RemoveAll(x => string.Equals(x, issue, StringComparison.OrdinalIgnoreCase));
+            hasChanges = true;
 
-            // Mevcut ticket kontrolü
-            if (DatabaseHelper.HasTicketsForIssue(selectedIssue))
-            {
-                MessageBox.Show("Bu sorun tipine ait mevcut ticket'lar bulunduğu için silinemez.",
-                              "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            var result = MessageBox.Show($"'{selectedIssue}' sorununu silmek istediğinizden emin misiniz?",
-                                       "Onay", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-            if (result == DialogResult.Yes)
-            {
-                issueMap[selectedArea].Remove(selectedIssue);
-                listBoxIssues.Items.Remove(selectedIssue);
-                hasChanges = true;
-
-                MessageBox.Show($"'{selectedIssue}' sorunu başarıyla silindi.", "Başarılı",
-                              MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
+            listBoxIssues.Items.Remove(issue);
         }
+
+        // =========================================================================
+        // =========================  Genel Butonlar  ===============================
+        // =========================================================================
 
         private void BtnSave_Click(object sender, EventArgs e)
         {
-            if (!hasChanges)
-            {
-                MessageBox.Show("Kaydedilecek değişiklik bulunmuyor.", "Bilgi",
-                              MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-
             try
             {
-                // Veritabanına kaydet
-                DatabaseHelper.SaveAreaSubAreaMap(areaSubAreaMap);
-                DatabaseHelper.SaveIssueMap(issueMap);
+                // Alan/Alt Alan
+                DatabaseHelper.SaveAreaSubAreaMap(areaSubAreaMap);    // ref: :contentReference[oaicite:22]{index=22}
+
+                // Hatlar (Alt Alan → Hat)
+                DatabaseHelper.SaveSubAreaLineMap(subAreaLineMap);    // YENİ  // ref: :contentReference[oaicite:23]{index=23}
+
+                // Sorunlar (Alan → Sorun)
+                DatabaseHelper.SaveIssueMap(issueMap);                // ref: :contentReference[oaicite:24]{index=24}
 
                 hasChanges = false;
-                MessageBox.Show("Tüm değişiklikler başarıyla kaydedildi.", "Başarılı",
-                              MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Ayarlar başarıyla kaydedildi.", "Bilgi");
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                MessageBox.Show("Kaydetme işlemi sırasında hata oluştu. Lütfen logları kontrol edin.", "Hata",
-                              MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void BtnReset_Click(object sender, EventArgs e)
-        {
-            var result = MessageBox.Show("Tüm değişiklikler geri alınacak. Emin misiniz?", "Onay",
-                                       MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            if (result == DialogResult.Yes)
-            {
-                hasChanges = false;
-                LoadData();
-
-                // Form kontrollerini sıfırla
-                listBoxSubAreas.Items.Clear();
-                listBoxSubAreas.Enabled = false;
-                textBoxNewSubArea.Enabled = false;
-                btnAddSubArea.Enabled = false;
-                btnDeleteSubArea.Enabled = false;
-                lblSelectedArea.Text = "Seçilen Alan: Yok";
-
-                listBoxIssues.Items.Clear();
-                listBoxIssues.Enabled = false;
-                textBoxNewIssue.Enabled = false;
-                btnAddIssue.Enabled = false;
-                btnDeleteIssue.Enabled = false;
-
-                // Text kutularını temizle
-                textBoxNewArea.Clear();
-                textBoxNewSubArea.Clear();
-                textBoxNewIssue.Clear();
-
-                // Seçimleri temizle
-                listBoxAreas.ClearSelected();
-                comboBoxIssueArea.SelectedIndex = -1;
-
-                MessageBox.Show("Tüm değişiklikler geri alındı.", "Başarılı",
-                              MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Ayarlar kaydedilirken hata oluştu.", "Hata");
             }
         }
 
@@ -696,34 +419,357 @@ namespace TicketApp.Forms
         {
             if (hasChanges)
             {
-                var result = MessageBox.Show("Kaydedilmemiş değişiklikler var. Çıkmak istediğinizden emin misiniz?",
-                                           "Onay", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-                if (result == DialogResult.No)
-                {
-                    return;
-                }
+                var res = MessageBox.Show("Kaydedilmemiş değişiklikler var. Vazgeçmek istiyor musunuz?",
+                    "Uyarı", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (res != DialogResult.Yes) return;
             }
-
-            this.DialogResult = DialogResult.Cancel;
-            this.Close();
+            Close();
         }
 
-        protected override void OnFormClosing(FormClosingEventArgs e)
+        private void BtnReset_Click(object sender, EventArgs e)
         {
-            if (hasChanges)
+            var res = MessageBox.Show("Tüm ayarları varsayılana döndürmek istiyor musunuz?",
+                "Onay", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (res != DialogResult.Yes) return;
+
+            // Kataloglardan sıfırla (seed)
+            areaSubAreaMap = AreaCatalog.GetAreaSubAreaMap();   // ref: :contentReference[oaicite:25]{index=25}
+            subAreaLineMap = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase); // Hatları boş bırak
+            issueMap = IssueCatalog.GetIssueMap();               // ref: :contentReference[oaicite:26]{index=26}
+            hasChanges = true;
+            RefreshUI();
+            listBoxSubAreas.Items.Clear();
+            listBoxLines.Items.Clear();
+            listBoxIssues.Items.Clear();
+        }
+
+        // =========================================================================
+        // =========================  UI Oluşturma  =================================
+        // =========================================================================
+
+        /// <summary>
+        /// Alan & Alt Alan & Hat yönetim tab'ının görsel yerleşimi.
+        /// (Designer, bu metodu çağırır)
+        /// </summary>
+        private void CreateAreaManagementTab()
+        {
+            tabAreas = new TabPage("Alan Yönetimi");
+            tabAreas.BackColor = Color.White;
+            tabAreas.Padding = new Padding(10);
+
+            // ----- Ana alanlar grubu -----
+            var groupBoxAreas = new GroupBox
             {
-                var result = MessageBox.Show("Kaydedilmemiş değişiklikler var. Çıkmak istediğinizden emin misiniz?",
-                                           "Onay", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                Text = "Ana Alanlar (UAP / FES …)",
+                Location = new Point(10, 10),
+                Size = new Size(340, 300),
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold)
+            };
 
-                if (result == DialogResult.No)
-                {
-                    e.Cancel = true;
-                    return;
-                }
-            }
+            listBoxAreas = new ListBox
+            {
+                Location = new Point(10, 25),
+                Size = new Size(320, 180),
+                Font = new Font("Segoe UI", 9F)
+            };
+            listBoxAreas.SelectedIndexChanged += ListBoxAreas_SelectedIndexChanged;
 
-            base.OnFormClosing(e);
+            textBoxNewArea = new TextBox
+            {
+                Location = new Point(10, 215),
+                Size = new Size(200, 23),
+                Font = new Font("Segoe UI", 9F)
+            };
+
+            btnAddArea = new Button
+            {
+                Text = "Ekle",
+                Location = new Point(220, 215),
+                Size = new Size(50, 25),
+                BackColor = Color.FromArgb(46, 204, 113),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9F)
+            };
+            btnAddArea.Click += BtnAddArea_Click;
+
+            btnDeleteArea = new Button
+            {
+                Text = "Sil",
+                Location = new Point(280, 215),
+                Size = new Size(50, 25),
+                BackColor = Color.FromArgb(231, 76, 60),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9F)
+            };
+            btnDeleteArea.Click += BtnDeleteArea_Click;
+
+            var lblWarning = new Label
+            {
+                Text = "⚠️ Mevcut ticket'ları olan alan/alt alan/hat silinemez",
+                Location = new Point(10, 250),
+                Size = new Size(320, 20),
+                ForeColor = Color.FromArgb(230, 126, 34),
+                Font = new Font("Segoe UI", 8F)
+            };
+
+            groupBoxAreas.Controls.AddRange(new Control[] { listBoxAreas, textBoxNewArea, btnAddArea, btnDeleteArea, lblWarning });
+
+            // ----- Alt alanlar grubu -----
+            var groupBoxSubAreas = new GroupBox
+            {
+                Text = "Alt Alanlar",
+                Location = new Point(360, 10),
+                Size = new Size(340, 180),
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold)
+            };
+
+            lblSelectedArea = new Label
+            {
+                Text = "Seçilen Alan: Yok",
+                Location = new Point(10, 25),
+                Size = new Size(320, 20),
+                ForeColor = Color.FromArgb(52, 73, 94),
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold)
+            };
+
+            listBoxSubAreas = new ListBox
+            {
+                Location = new Point(10, 50),
+                Size = new Size(320, 85),
+                Font = new Font("Segoe UI", 9F),
+                Enabled = false
+            };
+            listBoxSubAreas.SelectedIndexChanged += ListBoxSubAreas_SelectedIndexChanged;
+
+            textBoxNewSubArea = new TextBox
+            {
+                Location = new Point(10, 140),
+                Size = new Size(200, 23),
+                Font = new Font("Segoe UI", 9F),
+                Enabled = false
+            };
+
+            btnAddSubArea = new Button
+            {
+                Text = "Ekle",
+                Location = new Point(220, 140),
+                Size = new Size(50, 25),
+                BackColor = Color.FromArgb(46, 204, 113),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9F),
+                Enabled = false
+            };
+            btnAddSubArea.Click += BtnAddSubArea_Click;
+
+            btnDeleteSubArea = new Button
+            {
+                Text = "Sil",
+                Location = new Point(280, 140),
+                Size = new Size(50, 25),
+                BackColor = Color.FromArgb(231, 76, 60),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9F),
+                Enabled = false
+            };
+            btnDeleteSubArea.Click += BtnDeleteSubArea_Click;
+
+            groupBoxSubAreas.Controls.AddRange(new Control[] { lblSelectedArea, listBoxSubAreas, textBoxNewSubArea, btnAddSubArea, btnDeleteSubArea });
+
+            // ----- Hatlar (Line) grubu -----
+            var groupBoxLines = new GroupBox
+            {
+                Text = "Hatlar (Line)",
+                Location = new Point(360, 200),
+                Size = new Size(340, 180),
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold)
+            };
+
+            lblSelectedSubArea = new Label
+            {
+                Text = "Seçilen Alt Alan: Yok",
+                Location = new Point(10, 25),
+                Size = new Size(320, 20),
+                ForeColor = Color.FromArgb(52, 73, 94),
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold)
+            };
+
+            listBoxLines = new ListBox
+            {
+                Location = new Point(10, 50),
+                Size = new Size(320, 85),
+                Font = new Font("Segoe UI", 9F)
+            };
+
+            textBoxNewLine = new TextBox
+            {
+                Location = new Point(10, 140),
+                Size = new Size(200, 23),
+                Font = new Font("Segoe UI", 9F),
+                Enabled = false
+            };
+
+            btnAddLine = new Button
+            {
+                Text = "Ekle",
+                Location = new Point(220, 140),
+                Size = new Size(50, 25),
+                BackColor = Color.FromArgb(46, 204, 113),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9F),
+                Enabled = false
+            };
+            btnAddLine.Click += BtnAddLine_Click;
+
+            btnDeleteLine = new Button
+            {
+                Text = "Sil",
+                Location = new Point(280, 140),
+                Size = new Size(50, 25),
+                BackColor = Color.FromArgb(231, 76, 60),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9F),
+                Enabled = false
+            };
+            btnDeleteLine.Click += BtnDeleteLine_Click;
+
+            groupBoxLines.Controls.AddRange(new Control[] { lblSelectedSubArea, listBoxLines, textBoxNewLine, btnAddLine, btnDeleteLine });
+
+            // Kılavuz
+            var lblGuide = new Label
+            {
+                Text = "📋 Kullanım: Önce Alan seçin → Alt Alan ekleyin/seçin → Hat ekleyin/silin.\n" +
+                       "Değişiklikleri kaydetmek için 'Kaydet' butonunu kullanın.",
+                Location = new Point(10, 390),
+                Size = new Size(690, 40),
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = Color.FromArgb(127, 140, 141)
+            };
+
+            tabAreas.Controls.AddRange(new Control[] { groupBoxAreas, groupBoxSubAreas, groupBoxLines, lblGuide });
+            tabControl.TabPages.Add(tabAreas);
+        }
+
+        /// <summary>
+        /// Sorun yönetimi tab'ının görsel yerleşimi.
+        /// </summary>
+        private void CreateIssueManagementTab()
+        {
+            tabIssues = new TabPage("Sorun Yönetimi")
+            {
+                BackColor = Color.White,
+                Padding = new Padding(10)
+            };
+
+            var lblSelect = new Label
+            {
+                Text = "Alan Seçiniz:",
+                Location = new Point(10, 15),
+                Size = new Size(100, 22)
+            };
+
+            comboBoxIssueArea = new ComboBox
+            {
+                Location = new Point(110, 12),
+                Size = new Size(220, 25),
+                DropDownStyle = ComboBoxStyle.DropDownList
+            };
+            comboBoxIssueArea.SelectedIndexChanged += ComboBoxIssueArea_SelectedIndexChanged;
+
+            listBoxIssues = new ListBox
+            {
+                Location = new Point(10, 50),
+                Size = new Size(320, 300),
+                Font = new Font("Segoe UI", 9F)
+            };
+
+            textBoxNewIssue = new TextBox
+            {
+                Location = new Point(350, 50),
+                Size = new Size(220, 23),
+                Font = new Font("Segoe UI", 9F)
+            };
+
+            btnAddIssue = new Button
+            {
+                Text = "Ekle",
+                Location = new Point(580, 50),
+                Size = new Size(60, 25),
+                BackColor = Color.FromArgb(46, 204, 113),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnAddIssue.Click += BtnAddIssue_Click;
+
+            btnDeleteIssue = new Button
+            {
+                Text = "Sil",
+                Location = new Point(650, 50),
+                Size = new Size(60, 25),
+                BackColor = Color.FromArgb(231, 76, 60),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnDeleteIssue.Click += BtnDeleteIssue_Click;
+
+            var lblTip = new Label
+            {
+                Text = "Not: Sorun tipleri alan bazlıdır (ör. UAP-1 için ayrı, UAP-2 için ayrı).",
+                Location = new Point(350, 85),
+                Size = new Size(360, 40),
+                ForeColor = Color.FromArgb(127, 140, 141)
+            };
+
+            tabIssues.Controls.AddRange(new Control[] {
+                lblSelect, comboBoxIssueArea, listBoxIssues, textBoxNewIssue, btnAddIssue, btnDeleteIssue, lblTip
+            });
+            tabControl.TabPages.Add(tabIssues);
+        }
+
+        /// <summary>
+        /// Formun altındaki Genel butonları oluşturur.
+        /// </summary>
+        private void CreateGeneralButtons()
+        {
+            btnSave = new Button
+            {
+                Text = "Kaydet",
+                Location = new Point(10, 520),
+                Size = new Size(100, 30),
+                BackColor = Color.FromArgb(41, 128, 185),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnSave.Click += BtnSave_Click;
+
+            btnCancel = new Button
+            {
+                Text = "Vazgeç",
+                Location = new Point(120, 520),
+                Size = new Size(100, 30),
+                BackColor = Color.FromArgb(149, 165, 166),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnCancel.Click += BtnCancel_Click;
+
+            btnReset = new Button
+            {
+                Text = "Varsayılanlara Dön",
+                Location = new Point(230, 520),
+                Size = new Size(140, 30),
+                BackColor = Color.FromArgb(243, 156, 18),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnReset.Click += BtnReset_Click;
+
+            this.Controls.AddRange(new Control[] { btnSave, btnCancel, btnReset });
         }
     }
 }

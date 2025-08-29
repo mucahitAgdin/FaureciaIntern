@@ -1,40 +1,32 @@
-﻿using System.Drawing;
+﻿// TicketApp/Forms/SettingsForm.Designer.cs
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace TicketApp.Forms
 {
     partial class SettingsForm
     {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
+        /// <summary>Designer container</summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        /// <summary>Dispose</summary>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
+            if (disposing && (components != null)) components.Dispose();
             base.Dispose(disposing);
         }
 
         #region Windows Form Designer generated code
-
         /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
+        /// Designer: Temel form ayarlarını kurar; TabControl ekler ve
+        /// ayrıntılı yerleşimi SettingsForm.cs içindeki Create* metodlarına bırakır.
         /// </summary>
         private void InitializeComponent()
         {
             this.SuspendLayout();
 
-            // Form ayarları
-            this.Text = "Sistem Ayarları - Alan ve Sorun Yönetimi";
+            // Form
+            this.Text = "Sistem Ayarları - Alan / Alt Alan / Hat ve Sorun Yönetimi";
             this.Size = new Size(800, 600);
             this.MinimumSize = new Size(800, 600);
             this.StartPosition = FormStartPosition.CenterParent;
@@ -42,23 +34,21 @@ namespace TicketApp.Forms
             this.MaximizeBox = false;
             this.BackColor = Color.White;
 
-            // TabControl oluştur
-            tabControl = new TabControl();
-            tabControl.Location = new Point(10, 10);
-            tabControl.Size = new Size(760, 500);
-            tabControl.Font = new Font("Segoe UI", 10F);
+            // TabControl
+            tabControl = new TabControl
+            {
+                Location = new Point(10, 10),
+                Size = new Size(760, 500),
+                Font = new Font("Segoe UI", 10F)
+            };
 
-            // Alan yönetimi tab'ı
+            // Sekmeleri ve alt butonları oluştur (SettingsForm.cs)
             CreateAreaManagementTab();
-
-            // Sorun yönetimi tab'ı
             CreateIssueManagementTab();
-
-            // Genel butonlar
             CreateGeneralButtons();
 
             this.Controls.Add(tabControl);
-            this.ResumeLayout();
+            this.ResumeLayout(false);
         }
         #endregion
     }
